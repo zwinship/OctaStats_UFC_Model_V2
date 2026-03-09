@@ -27,7 +27,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 # ── GitHub config ────────────────────────────────────────────────────────────
-GITHUB_TOKEN   = "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"   # zwinship PAT
+GITHUB_TOKEN   = ""   # zwinship PAT
 REPO_OWNER     = "zwinship"
 REPO_NAME      = "OctaStats_UFC_Model_V2"
 CUTOFF_YEAR    = 2015          # Only scrape fights from this year onward
