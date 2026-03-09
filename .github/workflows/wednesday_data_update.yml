@@ -1,0 +1,68 @@
+name: Wednesday — Data Update & Model Retrain
+
+on:
+  schedule:
+    # Every Wednesday at noon UTC (8am ET)
+    - cron: '0 12 * * 3'
+  # Allow manual trigger from Actions UI
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    name: Scrape New Data & Retrain Model
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            requests \
+            beautifulsoup4 \
+            lxml \
+            pandas \
+            numpy \
+            scipy \
+            scikit-learn \
+            tqdm
+
+      - name: Run weekly data scrape
+        env:
+          ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
+        run: |
+          echo "=== Running weekly data update ==="
+          python scripts/02_scrape_weekly_update.py
+
+      - name: Retrain model on updated data
+        env:
+          ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
+        run: |
+          echo "=== Retraining dynamic logit model ==="
+          python scripts/03_train_model.py
+
+      - name: Notify OctaStats site to refresh
+        if: success()
+        env:
+          OCTASTATS_PAT: ${{ secrets.OCTASTATS_PAT }}
+        run: |
+          curl -X POST \
+            -H "Authorization: token $OCTASTATS_PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/OctaStats/OctaStats.github.io/dispatches \
+            -d '{"event_type":"data-updated","client_payload":{"trigger":"wednesday-update"}}'
+          echo "Site refresh triggered"
+
+      - name: Log completion
+        if: always()
+        run: |
+          echo "Wednesday pipeline completed at $(date -u)"
