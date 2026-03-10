@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests beautifulsoup4 lxml pandas numpy tqdm
+          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn tqdm
 
       - name: "TEST: 02_scrape_weekly_update — UFCStats & UFC.com connectivity"
         run: |
