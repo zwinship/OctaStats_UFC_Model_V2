@@ -1,10 +1,16 @@
 fighter_a,fighter_b,matchup,prop_type,prop_label,model_prob,base_rate,model_edge_vs_base,confidence,market_implied_prob,market_edge,flagged,bet_size,cv_auc
+Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,went_distance,Goes the Distance,0.5389,0.4994,0.0396,0.079,,,False,0.0,0.5836
+Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,ko_finish,KO/TKO Finish,0.5013,0.3203,0.181,0.2663,,,False,0.0,0.6104
+Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,sub_finish,Submission Finish,0.4273,0.1779,0.2493,0.3033,,,False,0.0,0.5373
 Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,went_distance,Goes the Distance,0.4957,0.4994,0.0036,0.0072,,,False,0.0,0.5836
 Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,ko_finish,KO/TKO Finish,0.4739,0.3203,0.1536,0.2259,,,False,0.0,0.6104
 Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,sub_finish,Submission Finish,0.5365,0.1779,0.3585,0.4361,,,False,0.0,0.5373
 Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,went_distance,Goes the Distance,0.3572,0.4994,0.1422,0.284,,,False,0.0,0.5836
 Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,ko_finish,KO/TKO Finish,0.6354,0.3203,0.315,0.4635,,,False,0.0,0.6104
 Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,sub_finish,Submission Finish,0.5127,0.1779,0.3348,0.4073,,,False,0.0,0.5373
+Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,went_distance,Goes the Distance,0.5389,0.4994,0.0396,0.079,,,False,0.0,0.5836
+Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,ko_finish,KO/TKO Finish,0.5013,0.3203,0.181,0.2663,,,False,0.0,0.6104
+Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,sub_finish,Submission Finish,0.4273,0.1779,0.2493,0.3033,,,False,0.0,0.5373
 Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,went_distance,Goes the Distance,0.6103,0.4994,0.1109,0.2215,,,False,0.0,0.5836
 Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,ko_finish,KO/TKO Finish,0.4186,0.3203,0.0983,0.1446,,,False,0.0,0.6104
 Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,sub_finish,Submission Finish,0.4059,0.1779,0.228,0.2774,,,False,0.0,0.5373
@@ -14,6 +20,9 @@ Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,sub_finish,Submission Finis
 Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,went_distance,Goes the Distance,0.4977,0.4994,0.0017,0.0034,,,False,0.0,0.5836
 Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,ko_finish,KO/TKO Finish,0.5125,0.3203,0.1922,0.2827,,,False,0.0,0.6104
 Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,sub_finish,Submission Finish,0.4777,0.1779,0.2998,0.3647,,,False,0.0,0.5373
+Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,went_distance,Goes the Distance,0.5355,0.4994,0.0362,0.0722,,,False,0.0,0.5836
+Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,ko_finish,KO/TKO Finish,0.4421,0.3203,0.1218,0.1792,,,False,0.0,0.6104
+Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,sub_finish,Submission Finish,0.5191,0.1779,0.3412,0.415,,,False,0.0,0.5373
 Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,went_distance,Goes the Distance,0.5395,0.4994,0.0402,0.0802,,,False,0.0,0.5836
 Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,ko_finish,KO/TKO Finish,0.5223,0.3203,0.202,0.2971,,,False,0.0,0.6104
 Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,sub_finish,Submission Finish,0.3887,0.1779,0.2108,0.2564,,,False,0.0,0.5373
