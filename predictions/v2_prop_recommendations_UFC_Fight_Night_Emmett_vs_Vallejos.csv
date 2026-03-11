@@ -1,0 +1,73 @@
+fighter_a,fighter_b,fighter,opponent,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,flagged,bet_size
+Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fighter_a_ko,Josh Emmett wins by KO/TKO,0.0515,,,False,0.0
+Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fighter_a_sub,Josh Emmett wins by Submission,0.0224,,,False,0.0
+Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fighter_a_dec,Josh Emmett wins by Decision,0.0863,,,False,0.0
+Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_ko,Kevin Vallejos wins by KO/TKO,0.2702,,,False,0.0
+Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_sub,Kevin Vallejos wins by Submission,0.1172,,,False,0.0
+Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_dec,Kevin Vallejos wins by Decision,0.4524,,,False,0.0
+Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fight_goes_distance,Fight Goes to Decision,0.5387,,,False,0.0
+Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fight_inside_distance,Fight Ends Inside Distance,0.4613,,,False,0.0
+Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fighter_a_ko,Amanda Lemos wins by KO/TKO,0.0773,,,False,0.0
+Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fighter_a_sub,Amanda Lemos wins by Submission,0.0524,,,False,0.0
+Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fighter_a_dec,Amanda Lemos wins by Decision,0.1286,,,False,0.0
+Amanda Lemos,Gillian Robertson,Gillian Robertson,Amanda Lemos,Amanda Lemos vs Gillian Robertson,fighter_b_ko,Gillian Robertson wins by KO/TKO,0.222,,,False,0.0
+Amanda Lemos,Gillian Robertson,Gillian Robertson,Amanda Lemos,Amanda Lemos vs Gillian Robertson,fighter_b_sub,Gillian Robertson wins by Submission,0.1504,,,False,0.0
+Amanda Lemos,Gillian Robertson,Gillian Robertson,Amanda Lemos,Amanda Lemos vs Gillian Robertson,fighter_b_dec,Gillian Robertson wins by Decision,0.3693,,,False,0.0
+Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fight_goes_distance,Fight Goes to Decision,0.4979,,,False,0.0
+Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fight_inside_distance,Fight Ends Inside Distance,0.5021,,,False,0.0
+Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fighter_a_ko,Ion Cutelaba wins by KO/TKO,0.1435,,,False,0.0
+Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fighter_a_sub,Ion Cutelaba wins by Submission,0.0627,,,False,0.0
+Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fighter_a_dec,Ion Cutelaba wins by Decision,0.1161,,,False,0.0
+Ion Cutelaba,Oumar Sy,Oumar Sy,Ion Cutelaba,Ion Cutelaba vs Oumar Sy,fighter_b_ko,Oumar Sy wins by KO/TKO,0.3018,,,False,0.0
+Ion Cutelaba,Oumar Sy,Oumar Sy,Ion Cutelaba,Ion Cutelaba vs Oumar Sy,fighter_b_sub,Oumar Sy wins by Submission,0.1318,,,False,0.0
+Ion Cutelaba,Oumar Sy,Oumar Sy,Ion Cutelaba,Ion Cutelaba vs Oumar Sy,fighter_b_dec,Oumar Sy wins by Decision,0.2442,,,False,0.0
+Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fight_goes_distance,Fight Goes to Decision,0.3603,,,False,0.0
+Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fight_inside_distance,Fight Ends Inside Distance,0.6397,,,False,0.0
+Andre Fili,Jose Delgado,Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,fighter_a_ko,Andre Fili wins by KO/TKO,0.0916,,,False,0.0
+Andre Fili,Jose Delgado,Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,fighter_a_sub,Andre Fili wins by Submission,0.0398,,,False,0.0
+Andre Fili,Jose Delgado,Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,fighter_a_dec,Andre Fili wins by Decision,0.1534,,,False,0.0
+Andre Fili,Jose Delgado,Jose Delgado,Andre Fili,Andre Fili vs Jose Delgado,fighter_b_ko,Jose Delgado wins by KO/TKO,0.2301,,,False,0.0
+Andre Fili,Jose Delgado,Jose Delgado,Andre Fili,Andre Fili vs Jose Delgado,fighter_b_sub,Jose Delgado wins by Submission,0.0998,,,False,0.0
+Andre Fili,Jose Delgado,Jose Delgado,Andre Fili,Andre Fili vs Jose Delgado,fighter_b_dec,Jose Delgado wins by Decision,0.3853,,,False,0.0
+Andre Fili,Jose Delgado,Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,fight_goes_distance,Fight Goes to Decision,0.5387,,,False,0.0
+Andre Fili,Jose Delgado,Andre Fili,Jose Delgado,Andre Fili vs Jose Delgado,fight_inside_distance,Fight Ends Inside Distance,0.4613,,,False,0.0
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_ko,Charles Johnson wins by KO/TKO,0.1499,,,False,0.0
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_sub,Charles Johnson wins by Submission,0.078,,,False,0.0
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_dec,Charles Johnson wins by Decision,0.3672,,,False,0.0
+Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_ko,Bruno Silva wins by KO/TKO,0.102,,,False,0.0
+Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_sub,Bruno Silva wins by Submission,0.0531,,,False,0.0
+Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_dec,Bruno Silva wins by Decision,0.2499,,,False,0.0
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fight_goes_distance,Fight Goes to Decision,0.6171,,,False,0.0
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fight_inside_distance,Fight Ends Inside Distance,0.3829,,,False,0.0
+Brad Tavares,Eryk Anders,Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,fighter_a_ko,Brad Tavares wins by KO/TKO,0.199,,,False,0.0
+Brad Tavares,Eryk Anders,Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,fighter_a_sub,Brad Tavares wins by Submission,0.0749,,,False,0.0
+Brad Tavares,Eryk Anders,Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,fighter_a_dec,Brad Tavares wins by Decision,0.2469,,,False,0.0
+Brad Tavares,Eryk Anders,Eryk Anders,Brad Tavares,Brad Tavares vs Eryk Anders,fighter_b_ko,Eryk Anders wins by KO/TKO,0.1831,,,False,0.0
+Brad Tavares,Eryk Anders,Eryk Anders,Brad Tavares,Brad Tavares vs Eryk Anders,fighter_b_sub,Eryk Anders wins by Submission,0.0689,,,False,0.0
+Brad Tavares,Eryk Anders,Eryk Anders,Brad Tavares,Brad Tavares vs Eryk Anders,fighter_b_dec,Eryk Anders wins by Decision,0.2272,,,False,0.0
+Brad Tavares,Eryk Anders,Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,fight_goes_distance,Fight Goes to Decision,0.4741,,,False,0.0
+Brad Tavares,Eryk Anders,Brad Tavares,Eryk Anders,Brad Tavares vs Eryk Anders,fight_inside_distance,Fight Ends Inside Distance,0.5259,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,fighter_a_ko,Chris Curtis wins by KO/TKO,0.0784,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,fighter_a_sub,Chris Curtis wins by Submission,0.0389,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,fighter_a_dec,Chris Curtis wins by Decision,0.1186,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Myktybek Orolbai,Chris Curtis,Chris Curtis vs Myktybek Orolbai,fighter_b_ko,Myktybek Orolbai wins by KO/TKO,0.2539,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Myktybek Orolbai,Chris Curtis,Chris Curtis vs Myktybek Orolbai,fighter_b_sub,Myktybek Orolbai wins by Submission,0.1259,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Myktybek Orolbai,Chris Curtis,Chris Curtis vs Myktybek Orolbai,fighter_b_dec,Myktybek Orolbai wins by Decision,0.3842,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,fight_goes_distance,Fight Goes to Decision,0.5028,,,False,0.0
+Chris Curtis,Myktybek Orolbai,Chris Curtis,Myktybek Orolbai,Chris Curtis vs Myktybek Orolbai,fight_inside_distance,Fight Ends Inside Distance,0.4972,,,False,0.0
+Elijah Smith,SuYoung You,Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,fighter_a_ko,Elijah Smith wins by KO/TKO,0.1926,,,False,0.0
+Elijah Smith,SuYoung You,Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,fighter_a_sub,Elijah Smith wins by Submission,0.1363,,,False,0.0
+Elijah Smith,SuYoung You,Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,fighter_a_dec,Elijah Smith wins by Decision,0.3795,,,False,0.0
+Elijah Smith,SuYoung You,SuYoung You,Elijah Smith,Elijah Smith vs SuYoung You,fighter_b_ko,SuYoung You wins by KO/TKO,0.0793,,,False,0.0
+Elijah Smith,SuYoung You,SuYoung You,Elijah Smith,Elijah Smith vs SuYoung You,fighter_b_sub,SuYoung You wins by Submission,0.0561,,,False,0.0
+Elijah Smith,SuYoung You,SuYoung You,Elijah Smith,Elijah Smith vs SuYoung You,fighter_b_dec,SuYoung You wins by Decision,0.1562,,,False,0.0
+Elijah Smith,SuYoung You,Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,fight_goes_distance,Fight Goes to Decision,0.5357,,,False,0.0
+Elijah Smith,SuYoung You,Elijah Smith,SuYoung You,Elijah Smith vs SuYoung You,fight_inside_distance,Fight Ends Inside Distance,0.4643,,,False,0.0
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fighter_a_ko,Piera Rodriguez wins by KO/TKO,0.2056,,,False,0.0
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fighter_a_sub,Piera Rodriguez wins by Submission,0.0755,,,False,0.0
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fighter_a_dec,Piera Rodriguez wins by Decision,0.3242,,,False,0.0
+Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hughes,fighter_b_ko,Sam Hughes wins by KO/TKO,0.1341,,,False,0.0
+Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hughes,fighter_b_sub,Sam Hughes wins by Submission,0.0492,,,False,0.0
+Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hughes,fighter_b_dec,Sam Hughes wins by Decision,0.2115,,,False,0.0
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fight_goes_distance,Fight Goes to Decision,0.5357,,,False,0.0
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fight_inside_distance,Fight Ends Inside Distance,0.4643,,,False,0.0
