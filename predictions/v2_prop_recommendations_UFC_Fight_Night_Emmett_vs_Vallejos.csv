@@ -4,7 +4,7 @@ Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Valle
 Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fighter_a_dec,Josh Emmett wins by Decision,0.0885,0.0952,-0.0067,False,0.0,
 Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_ko,Kevin Vallejos wins by KO/TKO,0.2689,0.4762,-0.2073,False,0.0,
 Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_sub,Kevin Vallejos wins by Submission,0.1166,0.125,-0.0084,False,0.0,
-Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_dec,Kevin Vallejos wins by Decision,0.4502,0.3125,0.1377,False,0.0,
+Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett,Josh Emmett vs Kevin Vallejos,fighter_b_dec,Kevin Vallejos wins by Decision,0.4502,0.3125,0.1377,True,1.0,https://sportsbook.draftkings.com/event/33766390?outcomes=0QA316782899%23526748479_13L9034Q13Q24
 Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fight_goes_distance,Fight Goes to Decision,0.5387,0.3876,0.1511,False,0.0,
 Josh Emmett,Kevin Vallejos,Josh Emmett,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fight_inside_distance,Fight Ends Inside Distance,0.4613,0.6721,-0.2108,False,0.0,
 Amanda Lemos,Gillian Robertson,Amanda Lemos,Gillian Robertson,Amanda Lemos vs Gillian Robertson,fighter_a_ko,Amanda Lemos wins by KO/TKO,0.0752,0.1176,-0.0424,False,0.0,
@@ -33,7 +33,7 @@ Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fight_goes_
 Ion Cutelaba,Oumar Sy,Ion Cutelaba,Oumar Sy,Ion Cutelaba vs Oumar Sy,fight_inside_distance,Fight Ends Inside Distance,0.6397,0.6667,-0.027,False,0.0,
 Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_ko,Charles Johnson wins by KO/TKO,0.1411,0.1667,-0.0256,False,0.0,
 Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_sub,Charles Johnson wins by Submission,0.0735,0.1176,-0.0441,False,0.0,
-Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_dec,Charles Johnson wins by Decision,0.3458,0.1818,0.164,False,0.0,
+Charles Johnson,Bruno Silva,Charles Johnson,Bruno Silva,Charles Johnson vs Bruno Silva,fighter_a_dec,Charles Johnson wins by Decision,0.3458,0.1818,0.164,True,1.0,https://sportsbook.draftkings.com/event/33766381?outcomes=0QA316782262%23526746532_13L9034Q11Q22
 Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_ko,Bruno Silva wins by KO/TKO,0.1107,0.1923,-0.0816,False,0.0,
 Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_sub,Bruno Silva wins by Submission,0.0576,0.0556,0.002,False,0.0,
 Charles Johnson,Bruno Silva,Bruno Silva,Charles Johnson,Charles Johnson vs Bruno Silva,fighter_b_dec,Bruno Silva wins by Decision,0.2713,0.4348,-0.1635,False,0.0,
@@ -70,4 +70,4 @@ Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hug
 Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hughes,fighter_b_sub,Sam Hughes wins by Submission,0.0495,0.0714,-0.0219,False,0.0,
 Piera Rodriguez,Sam Hughes,Sam Hughes,Piera Rodriguez,Piera Rodriguez vs Sam Hughes,fighter_b_dec,Sam Hughes wins by Decision,0.2127,0.3448,-0.1321,False,0.0,
 Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fight_goes_distance,Fight Goes to Decision,0.5357,0.7872,-0.2515,False,0.0,
-Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fight_inside_distance,Fight Ends Inside Distance,0.4643,0.2778,0.1865,True,1.0,https://gambly.com/gambly-bot?auto=1&prompt=piera+rodriguez+fight+does+not+go+the+distance
+Piera Rodriguez,Sam Hughes,Piera Rodriguez,Sam Hughes,Piera Rodriguez vs Sam Hughes,fight_inside_distance,Fight Ends Inside Distance,0.4643,0.2778,0.1865,False,0.0,
