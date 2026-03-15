@@ -1,35 +1,35 @@
 {
-  "analysis_date": "2026-03-15T13:05:54.937526",
+  "analysis_date": "2026-03-15T22:17:58.898065",
   "overall_performance": {
     "total_bets": 5,
-    "total_wins": 0,
-    "total_losses": 5,
-    "win_rate_pct": 0.0,
+    "total_wins": 4,
+    "total_losses": 1,
+    "win_rate_pct": 80.0,
     "units_staked": 13.46,
-    "units_returned": 0.0,
-    "net_units": -13.46,
-    "rtp_pct": 0.0,
+    "units_returned": 16.66,
+    "net_units": 3.2,
+    "rtp_pct": 123.77,
     "avg_odds": -149.0
   },
   "basic_statistics": {
     "count": 5,
-    "mean": 0.0,
-    "median": 0.0,
-    "std": 0.0,
+    "mean": 1.22524,
+    "median": 1.3922,
+    "std": 0.7253243019505138,
     "min": 0.0,
-    "max": 0.0,
-    "range": 0.0,
-    "iqr": 0.0
+    "max": 1.9259,
+    "range": 1.9259,
+    "iqr": 0.20210000000000017
   },
   "t_test": {
     "null_hypothesis_value": 0.96,
-    "t_statistic": -Infinity,
-    "p_value_one_sided": 1.0,
+    "t_statistic": 0.8176958482669304,
+    "p_value_one_sided": 0.22971963630860037,
     "conclusion": "Fail to reject H0",
     "vs_strict_breakeven": {
       "null_hypothesis_value": 1.0,
-      "t_statistic": -Infinity,
-      "p_value_one_sided": 1.0,
+      "t_statistic": 0.6943817405506085,
+      "p_value_one_sided": 0.2628317551796761,
       "conclusion": "Fail to reject H0"
     }
   },
@@ -37,12 +37,12 @@
     {
       "month": "2026-03",
       "bets": 5,
-      "wins": 0,
+      "wins": 4,
       "units_staked": 13.46,
-      "units_returned": 0.0,
-      "win_rate": 0.0,
-      "net_units": -13.46,
-      "rtp": 0.0
+      "units_returned": 16.6599,
+      "win_rate": 80.0,
+      "net_units": 3.2,
+      "rtp": 123.77
     }
   ],
   "calibration": [],
