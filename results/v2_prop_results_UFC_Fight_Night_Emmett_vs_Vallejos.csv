@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Emmett vs. Vallejos,2026-03-14,2026-03-15,Josh Emmett,Kevin Vallejos,Kevin Vallejos,Josh Emmett vs Kevin Vallejos,fighter_b_dec,Kevin Vallejos wins by Decision,0.4515,0.3125,0.139,1.55,0,0.0,-1.55,0.0
+UFC Fight Night: Emmett vs. Vallejos,2026-03-14,2026-03-15,Andre Fili,Jose Delgado,Jose Delgado,Andre Fili vs Jose Delgado,fighter_b_dec,Jose Delgado wins by Decision,0.4034,0.2083,0.1951,1.62,1,7.7772,6.1572,4.8007
+UFC Fight Night: Emmett vs. Vallejos,2026-03-14,2026-03-15,Andre Fili,Jose Delgado,Andre Fili,Andre Fili vs Jose Delgado,fight_goes_distance,Fight Goes to Decision,0.5387,0.3279,0.2108,1.58,1,4.8185,3.2385,3.0497
+UFC Fight Night: Emmett vs. Vallejos,2026-03-14,2026-03-15,Ion Cutelaba,Oumar Sy,Oumar Sy,Ion Cutelaba vs Oumar Sy,fighter_b_ko,Oumar Sy wins by KO/TKO,0.3236,0.2,0.1236,1.64,0,0.0,-1.64,0.0
