@@ -1,0 +1,109 @@
+{
+  "analysis_date": "2026-03-15T13:05:54.937526",
+  "overall_performance": {
+    "total_bets": 5,
+    "total_wins": 0,
+    "total_losses": 5,
+    "win_rate_pct": 0.0,
+    "units_staked": 13.46,
+    "units_returned": 0.0,
+    "net_units": -13.46,
+    "rtp_pct": 0.0,
+    "avg_odds": -149.0
+  },
+  "basic_statistics": {
+    "count": 5,
+    "mean": 0.0,
+    "median": 0.0,
+    "std": 0.0,
+    "min": 0.0,
+    "max": 0.0,
+    "range": 0.0,
+    "iqr": 0.0
+  },
+  "t_test": {
+    "null_hypothesis_value": 0.96,
+    "t_statistic": -Infinity,
+    "p_value_one_sided": 1.0,
+    "conclusion": "Fail to reject H0",
+    "vs_strict_breakeven": {
+      "null_hypothesis_value": 1.0,
+      "t_statistic": -Infinity,
+      "p_value_one_sided": 1.0,
+      "conclusion": "Fail to reject H0"
+    }
+  },
+  "monthly_performance": [
+    {
+      "month": "2026-03",
+      "bets": 5,
+      "wins": 0,
+      "units_staked": 13.46,
+      "units_returned": 0.0,
+      "win_rate": 0.0,
+      "net_units": -13.46,
+      "rtp": 0.0
+    }
+  ],
+  "calibration": [],
+  "style_analysis": {
+    "style_distribution": {
+      "BJJ": 2,
+      "Muay_Thai": 1,
+      "Mixed": 1,
+      "Wrestler": 1
+    },
+    "predicted_shift_count": 0
+  },
+  "bet_size_distribution": {
+    "mean_units": 2.692,
+    "max_units": 3.02,
+    "min_units": 2.52,
+    "units_by_bucket": {
+      "0-1": 0,
+      "1-2": 0,
+      "2-3": 4,
+      "3-4": 1,
+      "4-5": 0
+    }
+  },
+  "prop_performance": {
+    "total_props": 4,
+    "total_wins": 2,
+    "total_losses": 2,
+    "win_rate_pct": 50.0,
+    "units_staked": 6.39,
+    "units_returned": 12.6,
+    "net_units": 6.21,
+    "rtp_pct": 197.12,
+    "by_type": [
+      {
+        "prop_type": "fight_goes_distance",
+        "count": 1,
+        "wins": 1,
+        "staked": 1.58,
+        "returned": 4.8185,
+        "win_rate": 100.0,
+        "net": 3.238
+      },
+      {
+        "prop_type": "fighter_b_dec",
+        "count": 2,
+        "wins": 1,
+        "staked": 3.17,
+        "returned": 7.7772,
+        "win_rate": 50.0,
+        "net": 4.607
+      },
+      {
+        "prop_type": "fighter_b_ko",
+        "count": 1,
+        "wins": 0,
+        "staked": 1.64,
+        "returned": 0.0,
+        "win_rate": 0.0,
+        "net": -1.64
+      }
+    ]
+  }
+}
