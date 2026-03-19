@@ -2,8 +2,8 @@ name: Friday — Run Fight Predictions
 
 on:
   schedule:
-    # Every Friday at 9 pm ET)
-    - cron: '0 2 * * 6'
+    # Every Friday at 12 pm ET
+    - cron: '0 17 * * 5'
   workflow_dispatch:
 
 jobs:
