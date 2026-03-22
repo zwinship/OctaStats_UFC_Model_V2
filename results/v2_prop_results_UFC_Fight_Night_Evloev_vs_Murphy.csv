@@ -1,0 +1,2 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Evloev vs. Murphy,2026-03-21,2026-03-22,Movsar Evloev,Lerone Murphy,Movsar Evloev,Movsar Evloev vs Lerone Murphy,fight_inside_distance,Fight Ends Inside Distance,0.4949,0.3401,0.1548,1.56,0,0.0,-1.56,0.0
