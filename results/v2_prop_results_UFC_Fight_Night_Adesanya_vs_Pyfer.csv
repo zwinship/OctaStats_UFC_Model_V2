@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Adesanya vs. Pyfer,2026-03-28,2026-03-29,Israel Adesanya,Joe Pyfer,Joe Pyfer,Israel Adesanya vs Joe Pyfer,fighter_b_dec,Joe Pyfer wins by Decision,0.289,0.1,0.189,1.73,0,0.0,-1.73,0.0
+UFC Fight Night: Adesanya vs. Pyfer,2026-03-28,2026-03-29,Terrance McKinney,Kyle Nelson,Terrance McKinney,Terrance McKinney vs Kyle Nelson,fighter_a_dec,Terrance McKinney wins by Decision,0.2485,0.0667,0.1818,1.75,0,0.0,-1.75,0.0
+UFC Fight Night: Adesanya vs. Pyfer,2026-03-28,2026-03-29,Terrance McKinney,Kyle Nelson,Terrance McKinney,Terrance McKinney vs Kyle Nelson,fight_goes_distance,Fight Goes to Decision,0.4708,0.1667,0.3041,1.6,0,0.0,-1.6,0.0
+UFC Fight Night: Adesanya vs. Pyfer,2026-03-28,2026-03-29,Alexia Thainara,Bruna Brasil,Alexia Thainara,Alexia Thainara vs Bruna Brasil,fighter_a_ko,Alexia Thainara wins by KO/TKO,0.2682,0.1111,0.1571,1.71,0,0.0,-1.71,0.0
