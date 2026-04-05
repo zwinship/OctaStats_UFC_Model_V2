@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Moicano vs. Duncan,2026-04-04,2026-04-05,Renato Moicano,Chris Duncan,Renato Moicano,Renato Moicano vs Chris Duncan,fighter_a_dec,Renato Moicano wins by Decision,0.2031,0.0952,0.1079,1.68,0,0.0,-1.68,0.0
+UFC Fight Night: Moicano vs. Duncan,2026-04-04,2026-04-05,Renato Moicano,Chris Duncan,Renato Moicano,Renato Moicano vs Chris Duncan,fight_goes_distance,Fight Goes to Decision,0.4647,0.2439,0.2208,1.58,0,0.0,-1.58,0.0
+UFC Fight Night: Moicano vs. Duncan,2026-04-04,2026-04-05,Virna Jandiroba,Tabatha Ricci,Virna Jandiroba,Virna Jandiroba vs Tabatha Ricci,fighter_a_ko,Virna Jandiroba wins by KO/TKO,0.1525,0.0294,0.1231,1.73,0,0.0,-1.73,0.0
+UFC Fight Night: Moicano vs. Duncan,2026-04-04,2026-04-05,Azamat Bekoev,Tresean Gore,Tresean Gore,Azamat Bekoev vs Tresean Gore,fighter_b_ko,Tresean Gore wins by KO/TKO,0.1684,0.0625,0.1059,1.7,0,0.0,-1.7,0.0
