@@ -1,0 +1,4 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC 327: Prochazka vs. Ulberg,2026-04-11,2026-04-12,Mateusz Gamrot,Esteban Ribovics,Mateusz Gamrot,Mateusz Gamrot vs Esteban Ribovics,fighter_a_ko,Mateusz Gamrot wins by KO/TKO,0.2141,0.0952,0.1189,1.7,0,0.0,-1.7,0.0
+UFC 327: Prochazka vs. Ulberg,2026-04-11,2026-04-12,Tatiana Suarez,Loopy Godinez,Tatiana Suarez,Tatiana Suarez vs Loopy Godinez,fight_inside_distance,Fight Ends Inside Distance,0.5318,0.2667,0.2651,1.59,1,5.9618,4.3718,3.7496
+UFC 327: Prochazka vs. Ulberg,2026-04-11,2026-04-12,Charles Radtke,Francisco Prado,Francisco Prado,Charles Radtke vs Francisco Prado,fighter_b_dec,Francisco Prado wins by Decision,0.2566,0.1053,0.1513,1.71,0,0.0,-1.71,0.0
