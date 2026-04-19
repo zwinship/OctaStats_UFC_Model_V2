@@ -1,0 +1,4 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Burns vs. Malott,2026-04-18,2026-04-19,Gilbert Burns,Mike Malott,Mike Malott,Gilbert Burns vs Mike Malott,fighter_b_dec,Mike Malott wins by Decision,0.3432,0.1538,0.1894,1.68,0,0.0,-1.68,0.0
+UFC Fight Night: Burns vs. Malott,2026-04-18,2026-04-19,JJ Aldrich,Jamey-Lyn Horth,JJ Aldrich,JJ Aldrich vs Jamey-Lyn Horth,fighter_a_ko,JJ Aldrich wins by KO/TKO,0.2316,0.0625,0.1691,1.75,0,0.0,-1.75,0.0
+UFC Fight Night: Burns vs. Malott,2026-04-18,2026-04-19,JJ Aldrich,Jamey-Lyn Horth,JJ Aldrich,JJ Aldrich vs Jamey-Lyn Horth,fight_inside_distance,Fight Ends Inside Distance,0.5316,0.2326,0.299,1.6,0,0.0,-1.6,0.0
