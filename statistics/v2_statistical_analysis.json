@@ -1,35 +1,35 @@
 {
-  "analysis_date": "2026-04-26T12:57:28.252537",
+  "analysis_date": "2026-05-03T12:59:57.010233",
   "overall_performance": {
-    "total_bets": 21,
-    "total_wins": 13,
-    "total_losses": 8,
-    "win_rate_pct": 61.9,
-    "units_staked": 55.24,
-    "units_returned": 79.36,
-    "net_units": 24.12,
-    "rtp_pct": 143.66,
-    "avg_odds": 18.8
+    "total_bets": 24,
+    "total_wins": 14,
+    "total_losses": 10,
+    "win_rate_pct": 58.33,
+    "units_staked": 63.05,
+    "units_returned": 82.11,
+    "net_units": 19.06,
+    "rtp_pct": 130.24,
+    "avg_odds": -12.0
   },
   "basic_statistics": {
-    "count": 21,
-    "mean": 1.425942857142857,
-    "median": 1.3922,
-    "std": 1.5322109474779995,
+    "count": 24,
+    "mean": 1.2936625,
+    "median": 1.3319999999999999,
+    "std": 1.4847676892838504,
     "min": 0.0,
     "max": 6.25,
     "range": 6.25,
-    "iqr": 2.17
+    "iqr": 2.0575
   },
   "t_test": {
     "null_hypothesis_value": 0.96,
-    "t_statistic": 1.3935538157429832,
-    "p_value_one_sided": 0.089373261379143,
+    "t_statistic": 1.1009168332530226,
+    "p_value_one_sided": 0.14116081447100637,
     "conclusion": "Fail to reject H0",
     "vs_strict_breakeven": {
       "null_hypothesis_value": 1.0,
-      "t_statistic": 1.2739207925617115,
-      "p_value_one_sided": 0.1086485460899903,
+      "t_statistic": 0.9689371432065805,
+      "p_value_one_sided": 0.17132805635533746,
       "conclusion": "Fail to reject H0"
     }
   },
@@ -53,6 +53,16 @@
       "win_rate": 66.67,
       "net_units": 26.063,
       "rtp": 183.48
+    },
+    {
+      "month": "2026-05",
+      "bets": 3,
+      "wins": 1,
+      "units_staked": 7.8100000000000005,
+      "units_returned": 2.7577,
+      "win_rate": 33.33,
+      "net_units": -5.052,
+      "rtp": 35.31
     }
   ],
   "calibration": [
@@ -74,19 +84,19 @@
     },
     {
       "prob_bucket": "50-60%",
-      "count": 8,
+      "count": 10,
       "actual_wins": 4,
-      "avg_predicted": 0.5505,
-      "actual_win_rate": 0.5,
-      "calibration_err": 0.0505
+      "avg_predicted": 0.5542,
+      "actual_win_rate": 0.4,
+      "calibration_err": 0.1542
     },
     {
       "prob_bucket": "60-70%",
-      "count": 4,
-      "actual_wins": 2,
-      "avg_predicted": 0.6299,
-      "actual_win_rate": 0.5,
-      "calibration_err": 0.1299
+      "count": 5,
+      "actual_wins": 3,
+      "avg_predicted": 0.6413,
+      "actual_win_rate": 0.6,
+      "calibration_err": 0.0413
     },
     {
       "prob_bucket": "70-80%",
@@ -99,9 +109,9 @@
   ],
   "style_analysis": {
     "style_distribution": {
-      "BJJ": 6,
-      "Wrestler": 6,
-      "Striker": 3,
+      "BJJ": 7,
+      "Wrestler": 7,
+      "Striker": 4,
       "Muay_Thai": 2,
       "Mixed": 2,
       "Sniper": 2
@@ -109,35 +119,35 @@
     "predicted_shift_count": 0
   },
   "bet_size_distribution": {
-    "mean_units": 2.63,
+    "mean_units": 2.627,
     "max_units": 3.02,
     "min_units": 2.5,
     "units_by_bucket": {
       "0-1": 0,
       "1-2": 0,
-      "2-3": 20,
+      "2-3": 23,
       "3-4": 1,
       "4-5": 0
     }
   },
   "prop_performance": {
-    "total_props": 23,
+    "total_props": 26,
     "total_wins": 5,
-    "total_losses": 18,
-    "win_rate_pct": 21.74,
-    "units_staked": 38.25,
+    "total_losses": 21,
+    "win_rate_pct": 19.23,
+    "units_staked": 43.28,
     "units_returned": 47.79,
-    "net_units": 9.54,
-    "rtp_pct": 124.93,
+    "net_units": 4.51,
+    "rtp_pct": 110.41,
     "by_type": [
       {
         "prop_type": "fight_goes_distance",
-        "count": 4,
+        "count": 5,
         "wins": 2,
-        "staked": 6.37,
+        "staked": 7.970000000000001,
         "returned": 11.419599999999999,
-        "win_rate": 50.0,
-        "net": 5.05
+        "win_rate": 40.0,
+        "net": 3.45
       },
       {
         "prop_type": "fight_inside_distance",
@@ -168,12 +178,12 @@
       },
       {
         "prop_type": "fighter_b_dec",
-        "count": 7,
+        "count": 9,
         "wins": 2,
-        "staked": 11.76,
+        "staked": 15.19,
         "returned": 30.404,
-        "win_rate": 28.6,
-        "net": 18.644
+        "win_rate": 22.2,
+        "net": 15.214
       },
       {
         "prop_type": "fighter_b_ko",
