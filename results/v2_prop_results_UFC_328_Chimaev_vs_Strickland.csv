@@ -1,0 +1,4 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC 328: Chimaev vs. Strickland,2026-05-09,2026-05-10,Sean Brady,Joaquin Buckley,Sean Brady,Sean Brady vs Joaquin Buckley,fighter_a_ko,Sean Brady wins by KO/TKO,0.226,0.1111,0.1149,1.68,0,0.0,-1.68,0.0
+UFC 328: Chimaev vs. Strickland,2026-05-09,2026-05-10,Ateba Gautier,Ozzy Diaz,Ateba Gautier,Ateba Gautier vs Ozzy Diaz,fighter_a_dec,Ateba Gautier wins by Decision,0.2735,0.1111,0.1624,1.72,0,0.0,-1.72,0.0
+UFC 328: Chimaev vs. Strickland,2026-05-09,2026-05-10,Ateba Gautier,Ozzy Diaz,Ateba Gautier,Ateba Gautier vs Ozzy Diaz,fight_goes_distance,Fight Goes to Decision,0.4282,0.1587,0.2695,1.62,0,0.0,-1.62,0.0
