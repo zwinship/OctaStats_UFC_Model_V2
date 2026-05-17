@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Allen vs. Costa,2026-05-16,2026-05-17,Tuco Tokkos,Ivan Erslan,Tuco Tokkos,Tuco Tokkos vs Ivan Erslan,fighter_a_ko,Tuco Tokkos wins by KO/TKO,0.2462,0.1,0.1462,1.71,0,0.0,-1.71,0.0
+UFC Fight Night: Allen vs. Costa,2026-05-16,2026-05-17,Ketlen Vieira,Jacqueline Cavalcanti,Ketlen Vieira,Ketlen Vieira vs Jacqueline Cavalcanti,fighter_a_ko,Ketlen Vieira wins by KO/TKO,0.1546,0.0526,0.102,1.69,0,0.0,-1.69,0.0
+UFC Fight Night: Allen vs. Costa,2026-05-16,2026-05-17,Ketlen Vieira,Jacqueline Cavalcanti,Ketlen Vieira,Ketlen Vieira vs Jacqueline Cavalcanti,fight_inside_distance,Fight Ends Inside Distance,0.4812,0.25,0.2312,1.58,0,0.0,-1.58,0.0
+UFC Fight Night: Allen vs. Costa,2026-05-16,2026-05-17,Shauna Bannon,Nicolle Caliari,Nicolle Caliari,Shauna Bannon vs Nicolle Caliari,fighter_b_ko,Nicolle Caliari wins by KO/TKO,0.202,0.0909,0.1111,1.69,0,0.0,-1.69,0.0
