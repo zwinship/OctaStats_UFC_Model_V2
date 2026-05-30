@@ -30,8 +30,9 @@ import numpy as np
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from scipy.special import expit
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 warnings.filterwarnings("ignore")
 
@@ -132,17 +133,38 @@ def write_json_to_github(obj, repo_path, message, repo_name=None):
 
 # ── Step 1: Check for upcoming event ─────────────────────────────────────────
 
+def _playwright_get_html(url, wait_selector, timeout_ms=20000):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page    = browser.new_page(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        )
+        try:
+            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            page.wait_for_selector(wait_selector, timeout=timeout_ms)
+        except PWTimeout:
+            print(f"  [WARN] Playwright timed out waiting for {wait_selector} on {url}")
+        except Exception as e:
+            print(f"  [WARN] Playwright navigation error: {e}")
+        html = page.content()
+        browser.close()
+        return html
+
+
 def get_upcoming_event():
     url  = f"{BASE_URL}/statistics/events/upcoming"
-    resp = requests.get(url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
+    print("  Fetching UFCStats upcoming events (Playwright)...")
+    html = _playwright_get_html(url, "tr.b-statistics__table-row")
+    if not html:
         return None
-
-    soup      = BeautifulSoup(resp.text, "lxml")
+    soup      = BeautifulSoup(html, "lxml")
     rows      = soup.select("tr.b-statistics__table-row")
-    today     = datetime.utcnow().date()
+    today     = datetime.now(timezone.utc).date()
     next_week = today + timedelta(days=7)
-
     for row in rows:
         if row.find("th"):
             continue
@@ -169,18 +191,19 @@ def get_upcoming_event():
 
 
 def get_fights_from_event(event_url):
-    resp = requests.get(event_url, headers=SCRAPE_HEADERS, timeout=15, allow_redirects=True)
-    if resp.status_code != 200:
+    print(f"  Fetching event page (Playwright): {event_url}")
+    html = _playwright_get_html(event_url, "tr.b-fight-details__table-row")
+    if not html:
         return []
-    soup     = BeautifulSoup(resp.text, "lxml")
+    soup     = BeautifulSoup(html, "lxml")
     bouts    = []
-    all_rows = soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover") or \
-               soup.select("tr.b-fight-details__table-row")
-
+    all_rows = (
+        soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover")
+        or soup.select("tr.b-fight-details__table-row")
+    )
     WEIGHT_CLASSES = ["Strawweight", "Flyweight", "Bantamweight", "Featherweight",
                       "Lightweight", "Welterweight", "Middleweight", "Light Heavyweight",
                       "Heavyweight"]
-
     for row in all_rows:
         tds = row.find_all("td")
         if not tds:
@@ -195,7 +218,6 @@ def get_fights_from_event(event_url):
             fighter_links = row.select("a.b-link")
         if len(fighter_links) < 2:
             continue
-
         f1, f2 = fighter_links[0].get_text(strip=True), fighter_links[1].get_text(strip=True)
         wc = "Unknown"
         for td in tds:
