@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Song vs. Figueiredo,2026-05-30,2026-06-02,Sergei Pavlovich,Tallison Teixeira,Tallison Teixeira,Sergei Pavlovich vs Tallison Teixeira,fighter_b_ko,Tallison Teixeira wins by KO/TKO,0.2352,0.1176,0.1176,1.68,,1.68,0.0,1.0
+UFC Fight Night: Song vs. Figueiredo,2026-05-30,2026-06-02,Sergei Pavlovich,Tallison Teixeira,Tallison Teixeira,Sergei Pavlovich vs Tallison Teixeira,fighter_b_dec,Tallison Teixeira wins by Decision,0.2259,0.0667,0.1592,1.74,,1.74,0.0,1.0
+UFC Fight Night: Song vs. Figueiredo,2026-05-30,2026-06-02,Sergei Pavlovich,Tallison Teixeira,Sergei Pavlovich,Sergei Pavlovich vs Tallison Teixeira,fight_goes_distance,Fight Goes to Decision,0.4386,0.2083,0.2303,1.59,,1.59,0.0,1.0
+UFC Fight Night: Song vs. Figueiredo,2026-05-30,2026-06-02,Loma Lookboonmee,Jaqueline Amorim,Jaqueline Amorim,Loma Lookboonmee vs Jaqueline Amorim,fighter_b_ko,Jaqueline Amorim wins by KO/TKO,0.2151,0.0952,0.1199,1.7,,1.7,0.0,1.0
