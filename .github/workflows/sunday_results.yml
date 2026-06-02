@@ -32,7 +32,10 @@ jobs:
             pandas \
             numpy \
             scipy \
-            scikit-learn
+            scikit-learn \
+            playwright
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
 
       - name: Scrape V2 fight results
         env:
