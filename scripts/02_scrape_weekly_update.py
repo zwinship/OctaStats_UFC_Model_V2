@@ -12,6 +12,7 @@ Environment variables (set as GitHub Actions secrets):
 """
 
 import requests
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 import pandas as pd
 import numpy as np
 import base64
@@ -95,13 +96,35 @@ _SESSION = requests.Session()
 _SESSION.headers.update(HEADERS)
 
 
+def _playwright_get_html(url, wait_selector="body", timeout_ms=20000):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page    = browser.new_page(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        )
+        try:
+            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            page.wait_for_selector(wait_selector, timeout=timeout_ms)
+        except PWTimeout:
+            print(f"  [WARN] Playwright timed out waiting for {wait_selector} on {url}")
+        except Exception as e:
+            print(f"  [WARN] Playwright navigation error: {e}")
+        html = page.content()
+        browser.close()
+        return html
+
+
 def get_soup(url, retries=3, delay=1.2):
     for attempt in range(retries):
         try:
-            resp = _SESSION.get(url, timeout=20, allow_redirects=True)
-            if resp.status_code == 200:
+            html = _playwright_get_html(url, wait_selector="body")
+            if html:
                 time.sleep(delay)
-                return BeautifulSoup(resp.text, "lxml")
+                return BeautifulSoup(html, "lxml")
         except Exception as e:
             print(f"  [WARN] {e}")
             time.sleep(delay * 2)
@@ -316,9 +339,10 @@ def parse_fight_page(fight_url, event_name, event_date, event_location):
 
 
 def get_fight_urls_from_event(event_url):
-    soup = get_soup(event_url, delay=0.8)
-    if soup is None:
+    html = _playwright_get_html(event_url, wait_selector="tr.b-fight-details__table-row")
+    if not html:
         return []
+    soup = BeautifulSoup(html, "lxml")
     return [
         row.get("data-link")
         for row in soup.select(".b-fight-details__table-row.b-fight-details__table-row__hover")
