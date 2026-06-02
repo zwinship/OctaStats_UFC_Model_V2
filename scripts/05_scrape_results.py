@@ -25,6 +25,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
 # ── Config ────────────────────────────────────────────────────────────────────
 import sys as _sys
@@ -97,21 +98,38 @@ def write_csv(df, repo_path, message, sha=None):
 
 # ── Step 1: Find most recent completed event ──────────────────────────────────
 
+def _playwright_get_html(url, wait_selector, timeout_ms=20000):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page    = browser.new_page(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        )
+        try:
+            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            page.wait_for_selector(wait_selector, timeout=timeout_ms)
+        except PWTimeout:
+            print(f"  [WARN] Playwright timed out waiting for {wait_selector} on {url}")
+        except Exception as e:
+            print(f"  [WARN] Playwright navigation error: {e}")
+        html = page.content()
+        browser.close()
+        return html
+
+
 def get_recent_completed_event():
-    """
-    Return the most recent completed event if it happened within the last 7 days,
-    else return None.
-    """
     url  = f"{BASE_URL}/statistics/events/completed"
-    resp = requests.get(url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
+    print("  Fetching UFCStats completed events (Playwright)...")
+    html = _playwright_get_html(url, "tr.b-statistics__table-row")
+    if not html:
         return None
-
-    soup  = BeautifulSoup(resp.text, "lxml")
-    rows  = soup.select("tr.b-statistics__table-row")
-    today = datetime.now(timezone.utc).date()
+    soup     = BeautifulSoup(html, "lxml")
+    rows     = soup.select("tr.b-statistics__table-row")
+    today    = datetime.now(timezone.utc).date()
     week_ago = today - timedelta(days=7)
-
     for row in rows:
         if row.find("th"):
             continue
@@ -130,65 +148,47 @@ def get_recent_completed_event():
                 event_date = datetime.strptime(date_text, "%b. %d, %Y").date()
             except ValueError:
                 continue
-
         if week_ago <= event_date <= today:
             return {
                 "name": link_el.get_text(strip=True),
                 "date": event_date.isoformat(),
                 "url":  link_el.get("href", ""),
             }
-
     return None
 
 
-# ── Step 2: Scrape winners from the completed event ───────────────────────────
-
 def get_winners_from_event(event_url):
-    """
-    Return dict of {fighter_name_lower: "W"/"L"} from a completed event page.
-
-    UFCStats event pages: each fight row has fighter names in <p><a> tags inside
-    the first <td>. The first <p> is always the winner on completed event pages.
-    Falls back to scraping individual fight pages if needed.
-    """
-    resp = requests.get(event_url, headers=SCRAPE_HEADERS, timeout=15, allow_redirects=True)
-    if resp.status_code != 200:
+    print(f"  Fetching event results page (Playwright): {event_url}")
+    html = _playwright_get_html(event_url, "tr.b-fight-details__table-row")
+    if not html:
         return {}
-
-    soup    = BeautifulSoup(resp.text, "lxml")
+    soup    = BeautifulSoup(html, "lxml")
     results = {}
-
     for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
         tds = row.find_all("td")
         if not tds:
             continue
-        # Fighter names are in <p><a> tags inside the first td
         fighter_links = tds[0].select("p a.b-link")
         if len(fighter_links) >= 2:
-            # First fighter = winner on completed event pages
             winner = fighter_links[0].get_text(strip=True)
             loser  = fighter_links[1].get_text(strip=True)
             results[winner.lower()] = "W"
             results[loser.lower()]  = "L"
         else:
-            # Fallback: scrape individual fight page
             fight_link = row.get("data-link", "")
             if fight_link:
                 winner = _scrape_fight_winner(fight_link)
                 if winner:
                     results[winner.lower()] = "W"
-
     return results
 
 
 def _scrape_fight_winner(fight_url):
     """Scrape the winner from an individual fight page."""
-    import time
-    time.sleep(0.8)
-    resp = requests.get(fight_url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
+    html = _playwright_get_html(fight_url, ".b-fight-details__person")
+    if not html:
         return None
-    soup = BeautifulSoup(resp.text, "lxml")
+    soup = BeautifulSoup(html, "lxml")
     for person_el in soup.select(".b-fight-details__person"):
         status = person_el.select_one(".b-fight-details__person-status")
         name   = person_el.select_one(".b-fight-details__person-name a")
