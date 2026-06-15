@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Freedom 250,2026-06-14,2026-06-15,Ilia Topuria,Justin Gaethje,Ilia Topuria,Ilia Topuria vs Justin Gaethje,fighter_a_dec,Ilia Topuria wins by Decision,0.361,0.0769,0.2841,1.72,,1.72,0.0,1.0
+UFC Freedom 250,2026-06-14,2026-06-15,Ilia Topuria,Justin Gaethje,Ilia Topuria,Ilia Topuria vs Justin Gaethje,fight_goes_distance,Fight Goes to Decision,0.4964,0.1299,0.3665,1.61,,1.61,0.0,1.0
+UFC Freedom 250,2026-06-14,2026-06-15,Josh Hokit,Derrick Lewis,Josh Hokit,Josh Hokit vs Derrick Lewis,fighter_a_dec,Josh Hokit wins by Decision,0.2457,0.1176,0.1281,1.69,,1.69,0.0,1.0
+UFC Freedom 250,2026-06-14,2026-06-15,Josh Hokit,Derrick Lewis,Derrick Lewis,Josh Hokit vs Derrick Lewis,fighter_b_dec,Derrick Lewis wins by Decision,0.1765,0.0476,0.1289,1.73,,1.73,0.0,1.0
