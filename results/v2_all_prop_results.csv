@@ -44,3 +44,7 @@ UFC Freedom 250,2026-06-14,2026-06-15,Ilia Topuria,Justin Gaethje,Ilia Topuria,I
 UFC Freedom 250,2026-06-14,2026-06-15,Ilia Topuria,Justin Gaethje,Ilia Topuria,Ilia Topuria vs Justin Gaethje,fight_goes_distance,Fight Goes to Decision,0.4964,0.1299,0.3665,1.61,,1.61,0.0,1.0
 UFC Freedom 250,2026-06-14,2026-06-15,Josh Hokit,Derrick Lewis,Josh Hokit,Josh Hokit vs Derrick Lewis,fighter_a_dec,Josh Hokit wins by Decision,0.2457,0.1176,0.1281,1.69,,1.69,0.0,1.0
 UFC Freedom 250,2026-06-14,2026-06-15,Josh Hokit,Derrick Lewis,Derrick Lewis,Josh Hokit vs Derrick Lewis,fighter_b_dec,Derrick Lewis wins by Decision,0.1765,0.0476,0.1289,1.73,,1.73,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Andre Lima,Kevin Borjas,Kevin Borjas,Andre Lima vs Kevin Borjas,fighter_b_dec,Kevin Borjas wins by Decision,0.2881,0.0833,0.2048,1.75,,1.75,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Bia Mesquita,Melissa Mullins,Melissa Mullins,Bia Mesquita vs Melissa Mullins,fighter_b_dec,Melissa Mullins wins by Decision,0.2328,0.1053,0.1275,1.7,,1.7,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Karol Rosa,Luana Santos,Luana Santos,Karol Rosa vs Luana Santos,fighter_b_ko,Luana Santos wins by KO/TKO,0.1639,0.0385,0.1254,1.73,,1.73,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Karol Rosa,Luana Santos,Karol Rosa,Karol Rosa vs Luana Santos,fight_inside_distance,Fight Ends Inside Distance,0.4851,0.2083,0.2768,1.59,,1.59,0.0,1.0
