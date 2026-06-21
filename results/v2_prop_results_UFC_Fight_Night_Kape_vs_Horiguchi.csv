@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Andre Lima,Kevin Borjas,Kevin Borjas,Andre Lima vs Kevin Borjas,fighter_b_dec,Kevin Borjas wins by Decision,0.2881,0.0833,0.2048,1.75,,1.75,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Bia Mesquita,Melissa Mullins,Melissa Mullins,Bia Mesquita vs Melissa Mullins,fighter_b_dec,Melissa Mullins wins by Decision,0.2328,0.1053,0.1275,1.7,,1.7,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Karol Rosa,Luana Santos,Luana Santos,Karol Rosa vs Luana Santos,fighter_b_ko,Luana Santos wins by KO/TKO,0.1639,0.0385,0.1254,1.73,,1.73,0.0,1.0
+UFC Fight Night: Kape vs. Horiguchi,2026-06-20,2026-06-21,Karol Rosa,Luana Santos,Karol Rosa,Karol Rosa vs Luana Santos,fight_inside_distance,Fight Ends Inside Distance,0.4851,0.2083,0.2768,1.59,,1.59,0.0,1.0
