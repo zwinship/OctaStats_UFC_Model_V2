@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Fiziev vs. Torres,2026-06-27,2026-06-28,Rafael Fiziev,Manuel Torres,Manuel Torres,Rafael Fiziev vs Manuel Torres,fighter_b_dec,Manuel Torres wins by Decision,0.3343,0.0667,0.2676,1.75,,1.75,0.0,1.0
+UFC Fight Night: Fiziev vs. Torres,2026-06-27,2026-06-28,Rafael Fiziev,Manuel Torres,Rafael Fiziev,Rafael Fiziev vs Manuel Torres,fight_goes_distance,Fight Goes to Decision,0.5074,0.2222,0.2852,1.6,,1.6,0.0,1.0
+UFC Fight Night: Fiziev vs. Torres,2026-06-27,2026-06-28,Nazim Sadykhov,Matheus Camilo,Matheus Camilo,Nazim Sadykhov vs Matheus Camilo,fighter_b_dec,Matheus Camilo wins by Decision,0.3267,0.1538,0.1729,1.68,,1.68,0.0,1.0
+UFC Fight Night: Fiziev vs. Torres,2026-06-27,2026-06-28,Abus Magomedov,Michal Oleksiejczuk,Abus Magomedov,Abus Magomedov vs Michal Oleksiejczuk,fighter_a_dec,Abus Magomedov wins by Decision,0.2883,0.1111,0.1772,1.72,,1.72,0.0,1.0
