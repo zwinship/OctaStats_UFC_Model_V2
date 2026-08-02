@@ -1,35 +1,35 @@
 {
-  "analysis_date": "2026-07-26T13:21:25.817620",
+  "analysis_date": "2026-08-02T13:20:19.042768",
   "overall_performance": {
-    "total_bets": 67,
-    "total_wins": 26,
-    "total_losses": 41,
-    "win_rate_pct": 38.81,
-    "units_staked": 177.31,
-    "units_returned": 175.49,
-    "net_units": -1.82,
-    "rtp_pct": 98.97,
-    "avg_odds": 115.2
+    "total_bets": 69,
+    "total_wins": 27,
+    "total_losses": 42,
+    "win_rate_pct": 39.13,
+    "units_staked": 182.56,
+    "units_returned": 183.63,
+    "net_units": 1.07,
+    "rtp_pct": 100.58,
+    "avg_odds": 119.8
   },
   "basic_statistics": {
-    "count": 67,
-    "mean": 0.9778582089552238,
+    "count": 69,
+    "mean": 0.9948768115942027,
     "median": 0.0,
-    "std": 1.487592245690723,
+    "std": 1.4932266769871727,
     "min": 0.0,
     "max": 6.25,
     "range": 6.25,
-    "iqr": 1.7963
+    "iqr": 1.9259
   },
   "t_test": {
     "null_hypothesis_value": 0.96,
-    "t_statistic": 0.0982633114657344,
-    "p_value_one_sided": 0.4610105172712163,
+    "t_statistic": 0.19401512169300134,
+    "p_value_one_sided": 0.4233712320496,
     "conclusion": "Fail to reject H0",
     "vs_strict_breakeven": {
       "null_hypothesis_value": 1.0,
-      "t_statistic": -0.12183336611735726,
-      "p_value_one_sided": 0.5482994080524906,
+      "t_statistic": -0.02849962415062486,
+      "p_value_one_sided": 0.5113264270700469,
       "conclusion": "Fail to reject H0"
     }
   },
@@ -83,6 +83,16 @@
       "win_rate": 10.0,
       "net_units": -22.4,
       "rtp": 15.31
+    },
+    {
+      "month": "2026-08",
+      "bets": 2,
+      "wins": 1,
+      "units_staked": 5.25,
+      "units_returned": 8.138,
+      "win_rate": 50.0,
+      "net_units": 2.888,
+      "rtp": 155.01
     }
   ],
   "calibration": [
@@ -96,11 +106,11 @@
     },
     {
       "prob_bucket": "40-50%",
-      "count": 24,
-      "actual_wins": 7,
-      "avg_predicted": 0.4552,
-      "actual_win_rate": 0.2917,
-      "calibration_err": 0.1635
+      "count": 26,
+      "actual_wins": 8,
+      "avg_predicted": 0.4535,
+      "actual_win_rate": 0.3077,
+      "calibration_err": 0.1458
     },
     {
       "prob_bucket": "50-60%",
@@ -137,10 +147,10 @@
   ],
   "style_analysis": {
     "style_distribution": {
-      "BJJ": 17,
+      "BJJ": 18,
       "Striker": 15,
+      "Mixed": 14,
       "Wrestler": 14,
-      "Mixed": 13,
       "Muay_Thai": 4,
       "Sniper": 4
     },
@@ -153,7 +163,7 @@
     "units_by_bucket": {
       "0-1": 0,
       "1-2": 0,
-      "2-3": 65,
+      "2-3": 67,
       "3-4": 2,
       "4-5": 0
     }
