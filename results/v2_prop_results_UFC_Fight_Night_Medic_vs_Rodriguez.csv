@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Medic vs. Rodriguez,2026-08-01,2026-08-02,Uros Medic,Daniel Rodriguez,Uros Medic,Uros Medic vs Daniel Rodriguez,fighter_a_dec,Uros Medic wins by Decision,0.263,0.0526,0.2104,1.77,,1.77,0.0,1.0
+UFC Fight Night: Medic vs. Rodriguez,2026-08-01,2026-08-02,Uros Medic,Daniel Rodriguez,Daniel Rodriguez,Uros Medic vs Daniel Rodriguez,fighter_b_dec,Daniel Rodriguez wins by Decision,0.2443,0.0385,0.2058,1.78,,1.78,0.0,1.0
+UFC Fight Night: Medic vs. Rodriguez,2026-08-01,2026-08-02,Uros Medic,Daniel Rodriguez,Uros Medic,Uros Medic vs Daniel Rodriguez,fight_goes_distance,Fight Goes to Decision,0.5073,0.0962,0.4111,1.62,,1.62,0.0,1.0
+UFC Fight Night: Medic vs. Rodriguez,2026-08-01,2026-08-02,Mateusz Rebecki,Kyle Prepolec,Kyle Prepolec,Mateusz Rebecki vs Kyle Prepolec,fighter_b_dec,Kyle Prepolec wins by Decision,0.2008,0.0769,0.1239,1.71,,1.71,0.0,1.0
