@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC 330: Makhachev vs. Machado Garry,2026-08-15,2026-08-16,Jalin Turner,Kaue Fernandes,Jalin Turner,Jalin Turner vs Kaue Fernandes,fighter_a_dec,Jalin Turner wins by Decision,0.269,0.125,0.144,1.7,,1.7,0.0,1.0
+UFC 330: Makhachev vs. Machado Garry,2026-08-15,2026-08-16,Jalin Turner,Kaue Fernandes,Kaue Fernandes,Jalin Turner vs Kaue Fernandes,fighter_b_dec,Kaue Fernandes wins by Decision,0.2822,0.1176,0.1646,1.71,,1.71,0.0,1.0
+UFC 330: Makhachev vs. Machado Garry,2026-08-15,2026-08-16,Jalin Turner,Kaue Fernandes,Jalin Turner,Jalin Turner vs Kaue Fernandes,fight_goes_distance,Fight Goes to Decision,0.5511,0.2381,0.313,1.61,,1.61,0.0,1.0
+UFC 330: Makhachev vs. Machado Garry,2026-08-15,2026-08-16,Jeremiah Wells,Myktybek Orolbai,Jeremiah Wells,Jeremiah Wells vs Myktybek Orolbai,fighter_a_dec,Jeremiah Wells wins by Decision,0.1871,0.0588,0.1283,1.72,,1.72,0.0,1.0
