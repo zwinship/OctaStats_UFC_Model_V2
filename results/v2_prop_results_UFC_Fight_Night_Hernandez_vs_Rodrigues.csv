@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Hernandez vs. Rodrigues,2026-08-22,2026-08-23,Anthony Hernandez,Gregory Rodrigues,Gregory Rodrigues,Anthony Hernandez vs Gregory Rodrigues,fighter_b_dec,Gregory Rodrigues wins by Decision,0.2214,0.0769,0.1445,1.73,,1.73,0.0,1.0
+UFC Fight Night: Hernandez vs. Rodrigues,2026-08-22,2026-08-23,Anthony Hernandez,Gregory Rodrigues,Anthony Hernandez,Anthony Hernandez vs Gregory Rodrigues,fight_goes_distance,Fight Goes to Decision,0.4598,0.2564,0.2034,1.57,,1.57,0.0,1.0
+UFC Fight Night: Hernandez vs. Rodrigues,2026-08-22,2026-08-23,Reinier de Ridder,Roman Dolidze,Reinier de Ridder,Reinier de Ridder vs Roman Dolidze,fighter_a_ko,Reinier de Ridder wins by KO/TKO,0.263,0.1429,0.1201,1.67,,1.67,0.0,1.0
+UFC Fight Night: Hernandez vs. Rodrigues,2026-08-22,2026-08-23,Wes Schultz,Jackson McVey,Wes Schultz,Wes Schultz vs Jackson McVey,fighter_a_dec,Wes Schultz wins by Decision,0.2149,0.0769,0.138,1.72,,1.72,0.0,1.0
