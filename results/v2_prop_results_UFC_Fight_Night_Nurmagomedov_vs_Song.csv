@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Nurmagomedov vs. Song,2026-08-29,2026-08-30,Umar Nurmagomedov,Song Yadong,Song Yadong,Umar Nurmagomedov vs Song Yadong,fighter_b_dec,Song Yadong wins by Decision,0.2624,0.0833,0.1791,1.74,,1.74,0.0,1.0
+UFC Fight Night: Nurmagomedov vs. Song,2026-08-29,2026-08-30,Aoriqileng,Kai Asakura,Aoriqileng,Aoriqileng vs Kai Asakura,fighter_a_dec,Aoriqileng wins by Decision,0.2789,0.1111,0.1678,1.72,,1.72,0.0,1.0
+UFC Fight Night: Nurmagomedov vs. Song,2026-08-29,2026-08-30,Aoriqileng,Kai Asakura,Aoriqileng,Aoriqileng vs Kai Asakura,fight_goes_distance,Fight Goes to Decision,0.5384,0.3125,0.2259,1.59,,1.59,0.0,1.0
+UFC Fight Night: Nurmagomedov vs. Song,2026-08-29,2026-08-30,Rei Tsuruya,Kevin Borjas,Kevin Borjas,Rei Tsuruya vs Kevin Borjas,fighter_b_dec,Kevin Borjas wins by Decision,0.2544,0.0833,0.1711,1.74,,1.74,0.0,1.0
