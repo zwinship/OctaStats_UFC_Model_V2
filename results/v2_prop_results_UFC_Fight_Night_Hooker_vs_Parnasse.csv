@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Hooker vs. Parnasse,2026-09-05,2026-09-06,Michael Page,Nursulton Ruziboev,Nursulton Ruziboev,Michael Page vs Nursulton Ruziboev,fighter_b_ko,Nursulton Ruziboev wins by KO/TKO,0.2134,0.1,0.1134,1.69,,1.69,0.0,1.0
+UFC Fight Night: Hooker vs. Parnasse,2026-09-05,2026-09-06,Mario Pinto,Ryan Spann,Ryan Spann,Mario Pinto vs Ryan Spann,fighter_b_dec,Ryan Spann wins by Decision,0.172,0.0625,0.1095,1.7,,1.7,0.0,1.0
+UFC Fight Night: Hooker vs. Parnasse,2026-09-05,2026-09-06,Mario Pinto,Ryan Spann,Mario Pinto,Mario Pinto vs Ryan Spann,fight_goes_distance,Fight Goes to Decision,0.3881,0.2326,0.1555,1.62,,1.62,0.0,1.0
+UFC Fight Night: Hooker vs. Parnasse,2026-09-05,2026-09-06,Nora Cornolle,Klaudia Sygula,Klaudia Sygula,Nora Cornolle vs Klaudia Sygula,fighter_b_ko,Klaudia Sygula wins by KO/TKO,0.2134,0.0714,0.142,1.73,,1.73,0.0,1.0
