@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC 331: Van vs. Pantoja 2,2026-09-19,2026-09-20,Arman Tsarukyan,Mauricio Ruffy,Mauricio Ruffy,Arman Tsarukyan vs Mauricio Ruffy,fighter_b_dec,Mauricio Ruffy wins by Decision,0.2482,0.0769,0.1713,1.74,,1.74,0.0,1.0
+UFC 331: Van vs. Pantoja 2,2026-09-19,2026-09-20,Ryan Gandra,Ozzy Diaz,Ryan Gandra,Ryan Gandra vs Ozzy Diaz,fighter_a_dec,Ryan Gandra wins by Decision,0.2312,0.0714,0.1598,1.74,,1.74,0.0,1.0
+UFC 331: Van vs. Pantoja 2,2026-09-19,2026-09-20,Ryan Gandra,Ozzy Diaz,Ryan Gandra,Ryan Gandra vs Ozzy Diaz,fight_goes_distance,Fight Goes to Decision,0.4133,0.1389,0.2744,1.64,,1.64,0.0,1.0
+UFC 331: Van vs. Pantoja 2,2026-09-19,2026-09-20,Giga Chikadze,Joanderson Brito,Giga Chikadze,Giga Chikadze vs Joanderson Brito,fighter_a_dec,Giga Chikadze wins by Decision,0.2849,0.1111,0.1738,1.72,,1.72,0.0,1.0
