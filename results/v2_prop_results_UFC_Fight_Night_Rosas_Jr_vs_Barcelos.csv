@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Rosas Jr. vs. Barcelos,2026-09-26,2026-09-27,Norma Dumont,Ailin Perez,Norma Dumont,Norma Dumont vs Ailin Perez,fight_inside_distance,Fight Ends Inside Distance,0.5303,0.25,0.2803,1.6,,1.6,0.0,1.0
+UFC Fight Night: Rosas Jr. vs. Barcelos,2026-09-26,2026-09-27,Brady Hiestand,Rinya Nakamura,Brady Hiestand,Brady Hiestand vs Rinya Nakamura,fighter_a_dec,Brady Hiestand wins by Decision,0.2585,0.1333,0.1252,1.68,,1.68,0.0,1.0
+UFC Fight Night: Rosas Jr. vs. Barcelos,2026-09-26,2026-09-27,John Castaneda,Alatengheili,Alatengheili,John Castaneda vs Alatengheili,fighter_b_dec,Alatengheili wins by Decision,0.3004,0.1667,0.1337,1.67,,1.67,0.0,1.0
+UFC Fight Night: Rosas Jr. vs. Barcelos,2026-09-26,2026-09-27,Vanessa Demopoulos,Yazmin Jauregui,Vanessa Demopoulos,Vanessa Demopoulos vs Yazmin Jauregui,fighter_a_ko,Vanessa Demopoulos wins by KO/TKO,0.1632,0.0435,0.1197,1.72,,1.72,0.0,1.0
