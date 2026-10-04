@@ -1,0 +1,2 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC 332: Silva vs. Wang,2026-10-03,2026-10-04,Marvin Vettori,Ismail Naurdiev,Marvin Vettori,Marvin Vettori vs Ismail Naurdiev,fight_inside_distance,Fight Ends Inside Distance,0.5881,0.4132,0.1749,1.64,,1.64,0.0,1.0
