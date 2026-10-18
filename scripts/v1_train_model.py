@@ -119,25 +119,40 @@ def safe_col(df, col):
 def compute_career_averages(df):
     """
     Compute per-fighter career averages up to (but not including) each fight.
-    Returns a DataFrame indexed the same as df with career avg columns prefixed 'avg_'.
+    Returns a DataFrame with career avg columns prefixed 'avg_'.
     Leak-free: only uses fights strictly before the current fight date.
     """
     df = df.copy()
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df.sort_values("date")
+    df = df.sort_values(["fighter", "date"], kind="mergesort")
 
-    career_rows = []
-    for _, row in df.iterrows():
-        fighter  = row["fighter"]
-        fight_dt = row["date"]
-        prior    = df[(df["fighter"] == fighter) & (df["date"] < fight_dt)]
-        rec      = {"fighter": fighter, "date": fight_dt, "event": row.get("event", "")}
-        for col in STAT_COLS:
-            if col in df.columns:
-                rec[f"avg_{col}"] = prior[col].mean() if len(prior) else np.nan
-        career_rows.append(rec)
+    keep = ["fighter", "date", "event"] + [c for c in ("fight_url", "opponent") if c in df.columns]
+    out  = df[keep].copy()
+    grp  = df.groupby("fighter", sort=False)
+    for col in STAT_COLS:
+        if col in df.columns:
+            vals = pd.to_numeric(df[col], errors="coerce")
+            # mean of all PRIOR fights (NaNs skipped, NaN when none) — same
+            # value the original row-by-row filter produced
+            prior_sum = vals.fillna(0).groupby(df["fighter"]).cumsum() - vals.fillna(0)
+            prior_cnt = vals.notna().astype(int).groupby(df["fighter"]).cumsum() - vals.notna().astype(int)
+            out[f"avg_{col}"] = (prior_sum / prior_cnt.replace(0, np.nan)).values
+    return out.reset_index(drop=True)
 
-    return pd.DataFrame(career_rows)
+
+def compute_current_averages(df):
+    """Career averages over ALL of each fighter's fights (state going into
+    their next bout) — used at prediction time."""
+    df = df.copy()
+    out = {"fighter": [], "date": [], "weight_class": []}
+    last = df.sort_values("date").groupby("fighter").tail(1).set_index("fighter")
+    means = df.groupby("fighter")[[c for c in STAT_COLS if c in df.columns]].apply(
+        lambda g: g.apply(pd.to_numeric, errors="coerce").mean())
+    means.columns = [f"avg_{c}" for c in means.columns]
+    means["date"] = last["date"]
+    means["weight_class"] = last.get("weight_class")
+    means["n_fights"] = df.groupby("fighter").size()
+    return means.reset_index()
 
 
 def assign_style(df_career, weight_class):
@@ -161,7 +176,7 @@ def assign_style(df_career, weight_class):
         kd       = r.get("avg_kd", 0)
         sig      = r.get("avg_sig_str_landed", 0)
         td       = r.get("avg_td_landed", 0)
-        ctrl     = r.get("avg_ctrl_sec", 0)
+        ctrl     = r.get("avg_ctrl_seconds", 0)
         sub      = r.get("avg_sub_att", 0)
         clinch   = r.get("avg_clinch_landed", 0)
         body     = r.get("avg_body_landed", 0)
@@ -199,30 +214,32 @@ def build_matchup_features(df):
     df = df.copy()
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    # Group by (event, bout_id or sequential pair)
+    # One matchup per fight. Rows are grouped by fight_url (each fight has
+    # exactly two fighter rows). The fighter order inside the pair is
+    # alphabetical: UFCStats lists the winner first, so using page order
+    # would make f1_won almost always 1.
     matchups = []
-    for (event, date), grp in df.groupby(["event", "date"]):
-        fighters = grp.reset_index(drop=True)
-        if len(fighters) < 2:
+    group_key = "fight_url" if "fight_url" in df.columns else ["event", "date"]
+    for _, grp in df.groupby(group_key, sort=False):
+        if len(grp) != 2:
             continue
-        for i in range(0, len(fighters) - 1, 2):
-            f1 = fighters.iloc[i]
-            f2 = fighters.iloc[i + 1]
-            row = {
-                "event":        event,
-                "date":         date,
-                "fighter1":     f1["fighter"],
-                "fighter2":     f2["fighter"],
-                "style1":       f1.get("style", "Mixed"),
-                "style2":       f2.get("style", "Mixed"),
-                "weight_class": f1.get("weight_class", "Unknown"),
-                "winner":       f1["fighter"] if f1.get("result", "") == "W" else f2["fighter"],
-                "f1_won":       1 if f1.get("result", "") == "W" else 0,
-            }
-            for col in STAT_COLS:
-                ac = f"avg_{col}"
-                row[f"diff_{col}"] = f1.get(ac, 0) - f2.get(ac, 0)
-            matchups.append(row)
+        fighters = grp.sort_values("fighter").reset_index(drop=True)
+        f1, f2 = fighters.iloc[0], fighters.iloc[1]
+        row = {
+            "event":        f1.get("event", ""),
+            "date":         f1["date"],
+            "fighter1":     f1["fighter"],
+            "fighter2":     f2["fighter"],
+            "style1":       f1.get("style", "Mixed"),
+            "style2":       f2.get("style", "Mixed"),
+            "weight_class": f1.get("weight_class", "Unknown"),
+            "winner":       f1["fighter"] if f1.get("result", "") == "W" else f2["fighter"],
+            "f1_won":       1 if f1.get("result", "") == "W" else 0,
+        }
+        for col in STAT_COLS:
+            ac = f"avg_{col}"
+            row[f"diff_{col}"] = f1.get(ac, 0) - f2.get(ac, 0)
+        matchups.append(row)
 
     return pd.DataFrame(matchups)
 
@@ -289,6 +306,13 @@ def main():
             career = career.merge(fights[["fighter", "date", col]].drop_duplicates(),
                                   on=["fighter", "date"], how="left")
 
+    # Current (post-last-fight) averages for prediction time, styled together
+    # with the historical rows so they share the same z-score scale
+    current = compute_current_averages(fights)
+    current["_current"] = True
+    career["_current"]  = False
+    career = pd.concat([career, current], ignore_index=True)
+
     # 3. Assign V1 styles within weight class
     print("\n[3] Assigning V1 fighting styles…")
     career["style"] = "Mixed"
@@ -299,11 +323,17 @@ def main():
     else:
         career["style"] = assign_style(career, "all").values
 
+    current_stats = career[career["_current"]].drop(columns=["_current"]).reset_index(drop=True)
+    career = career[~career["_current"]].drop(columns=["_current", "n_fights"], errors="ignore")
+    career = career.reset_index(drop=True)
+
     style_counts = career["style"].value_counts()
     print(f"  Style distribution:\n{style_counts.to_string()}")
 
     # Push career stats to V1 repo for reference
-    write_csv_to_github(career, "data/career_styled_v1.csv",
+    # Same columns as before (fight_url/opponent are only needed for pairing)
+    write_csv_to_github(career.drop(columns=["fight_url", "opponent"], errors="ignore"),
+                        "data/career_styled_v1.csv",
                         "chore: update V1 career stats", repo=V1_REPO)
 
     # 4. Build matchup features
@@ -341,6 +371,8 @@ def main():
         "n_matchups":    len(matchups),
         "style_counts":  style_counts.to_dict(),
         "version":       "v1_automated",
+        # Per-fighter averages over ALL fights + style, for v1_predict
+        "current_stats": current_stats,
     }
     write_pickle_to_github(bundle, "data/v1_model_bundle.pkl",
                            "chore: retrain V1 model with latest data")

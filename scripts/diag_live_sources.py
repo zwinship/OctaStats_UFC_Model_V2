@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 sys.argv.append("--test")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+FIGHT_URL = "http://www.ufcstats.com/fight-details/d75b3d3c2b209b75"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 
@@ -39,8 +40,9 @@ try:
         grp = t.find_parent(class_=re.compile("view-grouping"))
         hdr = grp.select_one(".view-grouping-header") if grp else None
         first = [a.get_text(strip=True) for a in t.select("tbody tr td a")][:3]
-        print(f"  [{i:2d}] grouping-header={hdr.get_text(' ', strip=True) if hdr else None!r} "
-              f"caption={re.sub(r'\\s+', ' ', cap.get_text(' ', strip=True))[:90] if cap else None!r} first={first}")
+        hdr_t = hdr.get_text(" ", strip=True) if hdr else None
+        cap_t = re.sub(r"\s+", " ", cap.get_text(" ", strip=True))[:90] if cap else None
+        print(f"  [{i:2d}] grouping-header={hdr_t!r} caption={cap_t!r} first={first}")
     t0 = soup.select("table")[0]
     print("  table0 ancestry:", [(p.name, p.get("class")) for p in list(t0.parents)[:4]])
     print("  table0 caption html:", re.sub(r"\s+", " ", str(t0.find("caption")))[:800])
@@ -88,6 +90,22 @@ try:
         print(f"  → both lines found for {ok}/{len(ev['fights'])} bouts")
     print(f"  props: {len(props)} rows; sample:")
     print(props.head(12).to_string())
+except Exception:
+    traceback.print_exc()
+
+section("E. UFCStats fight page table structure (Buckley vs Usman, 5 rounds)")
+try:
+    from ufcstats_browser import fetch_html, SEL_FIGHT_PAGE
+    html = fetch_html(FIGHT_URL, SEL_FIGHT_PAGE)
+    soup = BeautifulSoup(html, "lxml")
+    for i, t in enumerate(soup.find_all("table")):
+        rows = t.select("tbody tr")
+        heads = [th.get_text(" ", strip=True) for th in t.select("thead th")][:6]
+        print(f"  table[{i}] class={t.get('class')} style={t.get('style')} tbody_rows={len(rows)} head={heads}")
+        if rows:
+            print("     row0:", [re.sub(r"\s+", " ", td.get_text(" ", strip=True))[:28] for td in rows[0].find_all("td")][:10])
+    for sec in soup.select("section.b-fight-details__section, p.b-fight-details__collapse-link_tot, a.b-fight-details__collapse-link_tot")[:12]:
+        print("   section:", sec.name, sec.get("class"), re.sub(r"\s+", " ", sec.get_text(" ", strip=True))[:80])
 except Exception:
     traceback.print_exc()
 
