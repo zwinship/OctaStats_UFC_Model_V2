@@ -34,6 +34,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept":        "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 BREAKEVEN = 0.96  # implied vig breakeven (same as V2)
 
 
@@ -47,7 +49,7 @@ def read_csv_from_github(repo_path):
     data = resp.json()
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         return pd.read_csv(io.StringIO(raw_resp.text)) if raw_resp.status_code == 200 else pd.DataFrame()
     content = base64.b64decode(raw_content).decode("utf-8")
     return pd.read_csv(io.StringIO(content))
@@ -76,11 +78,16 @@ def american_to_decimal(odds):
         return None
 
 
+PUSH_RESULTS = ("D", "NC", "VOID")   # draw / no contest / cancelled → stake returned
+
+
 def compute_rtp(row):
-    """RTP multiplier per unit staked. Win: decimal odds. Loss: 0."""
+    """RTP multiplier per unit staked. Win: decimal odds. Loss: 0. Push: 1."""
     bet = int(row.get("bet_size", 0))
     if bet == 0:
         return None
+    if row.get("result") in PUSH_RESULTS:
+        return 1.0
     won = row.get("won", 0) == 1 or row.get("result", "") == "W"
     odds_val = row.get("Odds") if row.get("Odds") is not None else row.get("odds")
     dec = american_to_decimal(odds_val)
@@ -153,16 +160,19 @@ def main():
         dec = american_to_decimal(odds_val)
         if dec is None:
             return 0.0
+        if r.get("result") in PUSH_RESULTS:
+            return 0.0
         won = r.get("won", 0) == 1 or r.get("result") == "W"
         bet = int(r.get("bet_size", 0))
         return float(dec - 1) * bet if won else -float(bet)
     bets["net"] = bets.apply(_net, axis=1)
+    pushes        = int(bets["result"].isin(PUSH_RESULTS).sum()) if "result" in bets.columns else 0
     total_bets    = len(bets)
     total_wins    = int(bets["won"].sum())
-    total_losses  = total_bets - total_wins
+    total_losses  = total_bets - total_wins - pushes
     units_staked  = float(bets["bet_size"].astype(float).sum())
     net_units     = float(bets["net"].sum())
-    win_rate_pct  = round(total_wins / total_bets * 100, 2) if total_bets else 0
+    win_rate_pct  = round(total_wins / (total_bets - pushes) * 100, 2) if total_bets > pushes else 0
     rtp_pct       = round((1 + net_units / units_staked) * 100, 2) if units_staked else 0
 
     # 5. Basic stats on RTP series

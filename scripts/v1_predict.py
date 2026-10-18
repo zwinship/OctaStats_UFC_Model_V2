@@ -36,6 +36,11 @@ warnings.filterwarnings("ignore")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from name_match import match_name
+from bfo_odds import parse_bfo_moneylines, match_bout_odds
+from ufcstats_browser import fetch_html, SEL_EVENT_LIST, SEL_EVENT_PAGE
+from dk_links import resolve_gambly_links
 GITHUB_TOKEN = os.environ.get("ZWINSHIP_PAT")
 if not GITHUB_TOKEN and "--test" not in _sys.argv:
     raise EnvironmentError("ZWINSHIP_PAT environment variable is not set.")
@@ -46,6 +51,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept":        "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -81,7 +88,7 @@ def read_csv_from_github(repo_path, repo=V1_REPO):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None
@@ -91,12 +98,12 @@ def read_csv_from_github(repo_path, repo=V1_REPO):
 
 def read_pickle_from_github(repo_path, repo=V1_REPO):
     url  = f"https://api.github.com/repos/{REPO_OWNER}/{repo}/contents/{repo_path}"
-    resp = requests.get(url, headers=GH_HEADERS, timeout=20)
+    # Raw media type works for files over the 1 MB inline-content limit
+    resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
     if resp.status_code != 200:
         print(f"  [ERROR] Could not load {repo_path}: {resp.status_code}")
         return None
-    data = resp.json()
-    return pickle.loads(base64.b64decode(data["content"]))
+    return pickle.loads(resp.content)
 
 
 def write_csv_to_github(df, repo_path, message, repo=V1_REPO):
@@ -119,10 +126,11 @@ def write_csv_to_github(df, repo_path, message, repo=V1_REPO):
 def get_upcoming_event():
     """Return (event_name, event_date, fights_list) or None if no event this week."""
     url  = f"{BASE_URL}/statistics/events/upcoming"
-    resp = requests.get(url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
-        return None
-    soup   = BeautifulSoup(resp.text, "lxml")
+    html = fetch_html(url, SEL_EVENT_LIST)
+    if not html:
+        raise RuntimeError("UFCStats upcoming-events page did not load "
+                           "(browser check not cleared) — refusing to report 'no event'.")
+    soup   = BeautifulSoup(html, "lxml")
     rows   = soup.select("tr.b-statistics__table-row")
     today  = datetime.utcnow().date()
     window = today + timedelta(days=7)
@@ -153,42 +161,31 @@ def get_upcoming_event():
 
 def scrape_event_card(event_url):
     """Scrape fighter names and weight classes from a UFCStats event page."""
-    resp = requests.get(event_url, headers=SCRAPE_HEADERS, timeout=15, allow_redirects=True)
-    if resp.status_code != 200:
-        return []
-    soup  = BeautifulSoup(resp.text, "lxml")
+    html = fetch_html(event_url, SEL_EVENT_PAGE)
+    if not html:
+        raise RuntimeError(f"UFCStats event page did not load: {event_url}")
+    soup  = BeautifulSoup(html, "lxml")
     bouts = []
-
-    all_rows = soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover") or                soup.select("tr.b-fight-details__table-row")
 
     WEIGHT_CLASSES = ["Strawweight", "Flyweight", "Bantamweight", "Featherweight",
                       "Lightweight", "Welterweight", "Middleweight", "Light Heavyweight",
-                      "Heavyweight"]
+                      "Heavyweight", "Catch Weight"]
 
-    for row in all_rows:
+    for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
         tds = row.find_all("td")
-        if not tds:
+        if len(tds) < 7:
             continue
-        fighter_links = []
-        for td_idx in [1, 0]:
-            if td_idx < len(tds):
-                fighter_links = tds[td_idx].select("p a.b-link") or tds[td_idx].select("a.b-link")
-                if len(fighter_links) >= 2:
-                    break
-        if len(fighter_links) < 2:
-            fighter_links = row.select("a.b-link")
+        fighter_links = tds[1].select("p a") or row.select("a.b-link")
         if len(fighter_links) < 2:
             continue
 
         f1, f2 = fighter_links[0].get_text(strip=True), fighter_links[1].get_text(strip=True)
+        wc_text = tds[6].get_text(" ", strip=True)
         wc = "Unknown"
-        for td in tds:
-            td_text = td.get_text(strip=True)
-            for wc_name in WEIGHT_CLASSES:
-                if wc_name.lower() in td_text.lower():
-                    wc = ("Women's " + wc_name) if "women" in td_text.lower() else wc_name
-                    break
-            if wc != "Unknown":
+        # Longest name first so "Light Heavyweight" is not read as "Heavyweight"
+        for wc_name in sorted(WEIGHT_CLASSES, key=len, reverse=True):
+            if wc_name.lower() in wc_text.lower():
+                wc = ("Women's " + wc_name) if "women" in wc_text.lower() else wc_name
                 break
         if f1 and f2:
             bouts.append({
@@ -206,119 +203,48 @@ def american_to_implied(odds):
     try:
         o = int(odds)
         return 100 / (100 + o) if o > 0 else abs(o) / (abs(o) + 100)
-    except (ValueError, ZeroDivisionError):
+    except (ValueError, ZeroDivisionError, TypeError):
         return None
 
 
 def scrape_bestfightodds(event_name=None):
     """
-    Scrape odds from BestFightOdds using V2-compatible logic.
-    Prefers DraftKings, falls back through BOOK_PREF list.
-    Returns dict: {fighter_name_lower: american_odds_str}
+    Moneylines from the BestFightOdds front page (DraftKings preferred, then
+    FanDuel and other sportsbooks; prediction markets are ignored).
+    Returns DataFrame: fighter, odds, opponent, book, matchup_id, event
     """
     url  = "https://www.bestfightodds.com/"
     resp = requests.get(url, headers=SCRAPE_HEADERS, timeout=20)
     if resp.status_code != 200:
         print(f"  [WARN] BestFightOdds returned {resp.status_code}")
-        return {}
-
-    soup = BeautifulSoup(resp.text, "lxml")
-    BOOK_PREF = ["draftkings", "caesars", "betrivers", "betway", "unibet", "bet365"]
-    book_col_map = {}
-
-    for row in soup.select("tr"):
-        cells = row.find_all(["td", "th"])
-        if len(cells) < 2:
-            continue
-        texts = [c.get_text(strip=True).lower() for c in cells]
-        if sum(1 for b in BOOK_PREF if any(b in t for t in texts)) >= 2:
-            for i, t in enumerate(texts):
-                for b in BOOK_PREF:
-                    if b in t and b not in book_col_map:
-                        book_col_map[b] = i
-            if book_col_map:
-                break
-
-    preferred_col, preferred_book = None, None
-    for book in BOOK_PREF:
-        if book in book_col_map:
-            preferred_col  = book_col_map[book]
-            preferred_book = book.title()
-            break
-
-    print(f"  [WARN] Using odds from: {preferred_book} (col {preferred_col})")
-
-    PROP_WORDS = {"wins", "by", "inside", "decision", "draw", "round", "goes", "starts",
-                  "doesn", "won", "ends", "either", "other", "points", "deducted",
-                  "submission", "tko", "ko", "majority", "split", "unanimous", "parlay",
-                  "over", "under", "not", "fight", "method"}
-
-    odds = {}
-    for row in soup.select("tr"):
-        name_el = row.select_one("a")
-        if not name_el:
-            continue
-        fighter_name = name_el.get_text(strip=True)
-        if not fighter_name or len(fighter_name) < 3:
-            continue
-        if set(fighter_name.lower().split()) & PROP_WORDS:
-            continue
-
-        cells     = row.find_all(["td", "th"])
-        odds_text = None
-        if preferred_col is not None and preferred_col < len(cells):
-            t = cells[preferred_col].get_text(strip=True)
-            if re.match(r'^[+-]\d{2,4}$', t):
-                odds_text = t
-
-        if odds_text is None:
-            m = re.search(r'[+-]\d{3,4}(?!\d)', row.get_text(" ", strip=True))
-            if m:
-                odds_text = m.group()
-
-        if odds_text and re.match(r'^[+-]\d{2,4}$', odds_text):
-            odds[fighter_name.lower()] = odds_text
-
-    print(f"  Scraped {len(odds)} fighters from BestFightOdds ({preferred_book})")
-    return odds
-
-
-def match_fighter_odds(name, odds_dict):
-    """Fuzzy-match a fighter name to the odds dict (last name first, then full)."""
-    name_l = name.lower().strip()
-    if name_l in odds_dict:
-        return odds_dict[name_l]
-    last = name_l.split()[-1]
-    for k, v in odds_dict.items():
-        if last in k:
-            return v
-    for k, v in odds_dict.items():
-        parts = name_l.split()
-        if any(p in k for p in parts if len(p) > 3):
-            return v
-    return None
+        return pd.DataFrame(columns=["fighter", "odds", "opponent", "book", "matchup_id", "event"])
+    odds_df = parse_bfo_moneylines(BeautifulSoup(resp.text, "lxml"))
+    print(f"  Scraped {len(odds_df)} fighters from BestFightOdds "
+          f"(books: {odds_df['book'].value_counts().to_dict() if not odds_df.empty else {}})")
+    return odds_df
 
 
 # ── V1 style assignment ───────────────────────────────────────────────────────
 
+def _fighter_rows(fighter_name, career_df):
+    if career_df is None or career_df.empty:
+        return career_df
+    hit = match_name(fighter_name, career_df["fighter"].unique().tolist())
+    return career_df[career_df["fighter"] == hit] if hit else career_df.iloc[0:0]
+
+
 def get_fighter_style(fighter_name, career_df):
     """Look up a fighter's most recent style from the career stats DataFrame."""
-    if career_df is None or career_df.empty:
-        return "Mixed"
-    mask = career_df["fighter"].str.lower() == fighter_name.lower()
-    rows = career_df[mask]
-    if rows.empty:
+    rows = _fighter_rows(fighter_name, career_df)
+    if rows is None or rows.empty:
         return "Mixed"
     return rows.sort_values("date").iloc[-1].get("style", "Mixed")
 
 
 def get_fighter_avg_stats(fighter_name, career_df):
     """Return the most recent career-average stat row for a fighter."""
-    if career_df is None or career_df.empty:
-        return {}
-    mask = career_df["fighter"].str.lower() == fighter_name.lower()
-    rows = career_df[mask]
-    if rows.empty:
+    rows = _fighter_rows(fighter_name, career_df)
+    if rows is None or rows.empty:
         return {}
     return rows.sort_values("date").iloc[-1].to_dict()
 
@@ -388,352 +314,9 @@ def v1_bet_size(edge):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def _gambly_url(prompt):
-    import urllib.parse
-    cleaned = prompt.lower().replace(" ", "+")
-    encoded = urllib.parse.quote(cleaned, safe="+")
-    return f"https://gambly.com/gambly-bot?auto=1&prompt={encoded}"
-
-
 def _v1_resolve_gambly_links(bet_records):
-    """
-    Resolve fighter names -> DraftKings deep links via Gambly for V1 bets.
-    Mirrors V2 resolve_gambly_links exactly:
-      1. Prefer GAMBLY_TOKEN_SET / GAMBLY_COOKIE env vars (authenticated session)
-      2. Fallback: headless Playwright to get anon CF cookies + force state=ME
-      3. POST start-betslip-job → poll → GET webpage-result
-      4. Primary path: get-alternate-offers-by-group-hash → sourceData DK URLs
-      5. Secondary path: load shareUrl in Playwright, click DK icon, scrape preurl
-      6. Final fallback: individual Gambly URLs per fighter
-    Returns (bet_records_with_dk_link, parlay_links_dict).
-    """
-    import time as _time
-    import json as _json
-
-    if not bet_records:
-        return bet_records, {"dk": None}
-
-    BASE    = "https://gambly.com/api/proxy/core/api"
-    UA      = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-               "AppleWebKit/537.36 (KHTML, like Gecko) "
-               "Chrome/122.0.0.0 Safari/537.36")
-    HEADERS = {
-        "User-Agent":   UA,
-        "Content-Type": "application/json",
-        "Referer":      "https://gambly.com/",
-        "Origin":       "https://gambly.com",
-    }
-
-    # ── Step 1: get session cookies ──────────────────────────────────────────
-    def _get_cf_cookies():
-        import traceback as _tb
-
-        token_set = os.environ.get("GAMBLY_TOKEN_SET", "").strip()
-        if token_set:
-            print(f"    [V1 Gambly] Using GAMBLY_TOKEN_SET secret (authenticated session)")
-            return f"gambly_token_set={token_set}"
-
-        gambly_cookie = os.environ.get("GAMBLY_COOKIE", "").strip()
-        if gambly_cookie:
-            print(f"    [V1 Gambly] Using GAMBLY_COOKIE secret (authenticated session)")
-            return gambly_cookie
-
-        # Fallback: get anonymous session via headless Playwright
-        print(f"    [V1 Gambly] Launching headless Chromium for CF cookies...")
-        try:
-            from playwright.sync_api import sync_playwright
-            with sync_playwright() as pw:
-                browser = pw.chromium.launch(headless=True)
-                ctx     = browser.new_context(user_agent=UA)
-                page    = ctx.new_page()
-                page.goto("https://gambly.com/gambly-bot",
-                          wait_until="domcontentloaded", timeout=20000)
-                _time.sleep(2)
-
-                # Force state=ME so Gambly enables DK deeplinks
-                page.evaluate("""async () => {
-                    try {
-                        await fetch('/api/get-books-priority-by-state?state=ME');
-                        await fetch('/api/proxy/core/api/books/get-books-by-location?location=ME');
-                    } catch(e) {}
-                }""")
-                _time.sleep(1)
-
-                cookies = ctx.cookies()
-                browser.close()
-
-            cookie_dict = {co["name"]: co["value"] for co in cookies}
-            sp = cookie_dict.get("searchParams", "N/A")
-            print(f"    [V1 Gambly] searchParams cookie: {sp[:150]}")
-            cookie_str = "; ".join(f"{co['name']}={co['value']}" for co in cookies)
-            print(f"    [V1 Gambly] Got {len(cookies)} anon cookies")
-            print(f"    [V1 Gambly] WARN: Anonymous session — DK deeplinks may be unavailable")
-            return cookie_str
-        except Exception as e:
-            print(f"    [V1 Gambly] Could not get CF cookies: {e}")
-            _tb.print_exc()
-            return None
-
-    # ── Step 2-5: call Gambly API, return (parlay_url, name_to_url) ──────────
-    def _get_dk_links(prompt, names, cookie_str):
-        headers = {**HEADERS, "Cookie": cookie_str}
-
-        # Start job
-        try:
-            print(f"    [V1 Gambly] POSTing start-betslip-job...")
-            r = requests.post(
-                f"{BASE}/gambly-bot/start-betslip-job",
-                headers=headers,
-                json={"prompt": prompt, "base64Images": [],
-                      "twitterUrl": "", "saveBetslipFeedPostSync": False},
-                timeout=20,
-            )
-            print(f"    [V1 Gambly] POST status: {r.status_code}")
-            if r.status_code not in (200, 202):
-                print(f"    [V1 Gambly] Unexpected status {r.status_code}: {r.text[:200]}")
-                return None, {}
-            job_id = r.json()["jobId"]
-            print(f"    [V1 Gambly] Job started: {job_id[:8]}...")
-        except Exception as e:
-            print(f"    [V1 Gambly] Job start failed: {e}")
-            import traceback; traceback.print_exc()
-            return None, {}
-
-        # Poll until completed (max 40s)
-        for attempt in range(20):
-            _time.sleep(2)
-            try:
-                r = requests.get(
-                    f"{BASE}/gambly-bot/betslip-job-status/{job_id}",
-                    headers=headers, timeout=10,
-                )
-                s = r.json().get("status")
-                if s == "completed":
-                    print(f"    [V1 Gambly] Job completed after {(attempt+1)*2}s")
-                    break
-                elif s == "failed":
-                    print(f"    [V1 Gambly] Job failed")
-                    return None, {}
-            except Exception as e:
-                print(f"    [V1 Gambly] Poll error: {e}")
-                return None, {}
-        else:
-            print(f"    [V1 Gambly] Timed out after 40s")
-            return None, {}
-
-        # Get result
-        try:
-            r = requests.get(
-                f"{BASE}/gambly-bot/webpage-result/{job_id}",
-                headers=headers, timeout=10,
-            )
-            r.raise_for_status()
-            _wr        = r.json()
-            _share_url = _wr.get("shareUrl", "")
-            qs         = _wr.get("queryString", "")
-        except Exception as e:
-            print(f"    [V1 Gambly] Result fetch failed: {e}")
-            return None, {}
-
-        # Parse bet IDs and group hashes
-        bet_ids, group_hash_ids = [], []
-        for part in qs.split("&"):
-            if part.startswith("betOfferIdsPoints="):
-                for token in part.split("=", 1)[1].split("|"):
-                    bid = token.split("_")[0]
-                    if bid.lstrip("-").isdigit():
-                        bet_ids.append(bid)
-            elif part.startswith("groupHashIds="):
-                group_hash_ids = [h for h in part.split("=", 1)[1].split("|") if h]
-
-        if not bet_ids:
-            print(f"    [V1 Gambly] No bet IDs in queryString")
-            return None, {}
-
-        print(f"    [V1 Gambly] {len(bet_ids)} bet IDs, {len(group_hash_ids)} group hashes")
-
-        dk_urls_by_bet_id = {}
-
-        if group_hash_ids:
-            # Primary path: get-alternate-offers-by-group-hash → sourceData DK URLs
-            try:
-                hashes_param = "%2C".join(group_hash_ids)
-                r = requests.get(
-                    f"{BASE}/bets/get-alternate-offers-by-group-hash"
-                    f"?groupHashIds={hashes_param}",
-                    headers=headers, timeout=10,
-                )
-                print(f"    [V1 Gambly] get-alternate-offers status: {r.status_code}")
-                r.raise_for_status()
-                resp_json = r.json()
-                print(f"    [V1 Gambly] Offer groups: {len(resp_json)}")
-                for group_offers in resp_json.values():
-                    for offer in (group_offers or []):
-                        bid = str(offer.get("id", ""))
-                        sd  = offer.get("sourceData", "")
-                        if sd:
-                            try:
-                                sd_obj = _json.loads(sd)
-                                dk_url = sd_obj.get("Desktop") or sd_obj.get("Android")
-                                if dk_url and "draftkings" in dk_url:
-                                    dk_urls_by_bet_id[bid] = dk_url
-                            except Exception:
-                                pass
-                print(f"    [V1 Gambly] DK URLs found: {len(dk_urls_by_bet_id)}")
-            except Exception as e:
-                print(f"    [V1 Gambly] get-alternate-offers failed: {e}")
-                import traceback; traceback.print_exc()
-        else:
-            # Secondary path: load shareUrl in Playwright, click DK icon, scrape preurl hrefs
-            if _share_url:
-                print(f"    [V1 Gambly] Loading share page to click DK icon and scrape links...")
-                try:
-                    import urllib.parse as _up
-                    from playwright.sync_api import sync_playwright as _spw
-                    with _spw() as _pw:
-                        _br  = _pw.chromium.launch(headless=True)
-                        _ctx = _br.new_context(user_agent=UA)
-                        _ctx.add_cookies([{
-                            "name": "gambly_token_set",
-                            "value": cookie_str.split("gambly_token_set=")[-1].split(";")[0],
-                            "domain": "gambly.com", "path": "/",
-                            "secure": True, "sameSite": "Lax",
-                        }])
-                        _pg = _ctx.new_page()
-                        _pg.goto(_share_url, wait_until="domcontentloaded", timeout=25000)
-                        _time.sleep(3)
-
-                        # Click DraftKings book icon
-                        try:
-                            _dk_btn = _pg.locator(
-                                "img[src*='draft-kings'], img[alt*='DraftKings'], "
-                                "button[aria-label*='DraftKings']"
-                            ).first
-                            if _dk_btn.count() == 0:
-                                _dk_btn = _pg.locator("[src*='draft-kings']").first
-                            _dk_btn.click(timeout=5000)
-                            print(f"    [V1 Gambly] Clicked DK book icon")
-                            _time.sleep(2)
-                        except Exception as _ce:
-                            print(f"    [V1 Gambly] DK icon click failed: {_ce} — trying xpath")
-                            try:
-                                _pg.click(
-                                    "xpath=/html/body/main/div[2]/div/div/div/div[2]"
-                                    "/div[1]/div[1]/div/div[1]/div/div/div[2]",
-                                    timeout=5000,
-                                )
-                                print(f"    [V1 Gambly] Clicked DK via xpath")
-                                _time.sleep(2)
-                            except Exception as _ce2:
-                                print(f"    [V1 Gambly] xpath click also failed: {_ce2}")
-
-                        def _decode_preurl(href):
-                            if not href: return None
-                            if "preurl=" in href:
-                                _qs2 = href.split("?", 1)[1] if "?" in href else ""
-                                _pm  = dict(p2.split("=", 1) for p2 in _qs2.split("&") if "=" in p2)
-                                _r2  = _up.unquote(_pm.get("preurl", ""))
-                                return _r2 if "draftkings" in _r2 else None
-                            if "draftkings" in href and "/event/" in href:
-                                return href
-                            return None
-
-                        _name_to_dk = {}
-                        _name_els = _pg.locator(".bet-name-renderer").all()
-                        print(f"    [V1 Gambly] Found {len(_name_els)} bet-name-renderer elements")
-                        for _nel in _name_els:
-                            try:
-                                _fighter = (_nel.inner_text() or "").strip()
-                                _parent  = _nel.locator("..").locator("..")
-                                _href    = _parent.locator("a[href*='draftkings']").first.get_attribute("href", timeout=2000) or ""
-                                _real    = _decode_preurl(_href)
-                                if _real and _fighter:
-                                    _name_to_dk[_fighter.lower()] = _real
-                                    print(f"    [V1 Gambly] Scraped: {_fighter} → {_real}")
-                            except Exception:
-                                pass
-
-                        for _name, _bid in zip(names, bet_ids):
-                            _nl  = _name.lower()
-                            _url = _name_to_dk.get(_nl)
-                            if not _url:
-                                _last = _nl.split()[-1]
-                                _url  = next((u for k, u in _name_to_dk.items() if _last in k), None)
-                            if _url:
-                                dk_urls_by_bet_id[_bid] = _url
-                                print(f"    [V1 Gambly] {_name} → {_url}")
-                            else:
-                                print(f"    [V1 Gambly] {_name}: no match in name→URL map")
-                        _br.close()
-                    print(f"    [V1 Gambly] DK URLs from share page: {len(dk_urls_by_bet_id)}")
-                except Exception as e:
-                    print(f"    [V1 Gambly] Share page scrape failed: {e}")
-                    import traceback; traceback.print_exc()
-            else:
-                print(f"    [V1 Gambly] No shareUrl available")
-
-        # Map URLs to fighter names by position (prompt order = names order = bet_ids order)
-        name_to_url = {}
-        for i, name in enumerate(names):
-            if i < len(bet_ids):
-                name_to_url[name] = dk_urls_by_bet_id.get(bet_ids[i])
-
-        # Build parlay URL
-        parlay_url = dk_urls_by_bet_id.pop("__parlay__", None)
-        if not parlay_url and len(bet_ids) >= 2:
-            try:
-                all_outcomes, event_id = [], None
-                for bid in bet_ids:
-                    url = dk_urls_by_bet_id.get(bid, "")
-                    if "outcomes=" in url:
-                        all_outcomes.append(url.split("outcomes=")[1].split("&")[0])
-                        if not event_id and "/event/" in url:
-                            event_id = url.split("/event/")[1].split("?")[0]
-                if all_outcomes and event_id:
-                    parlay_url = (
-                        f"https://sportsbook.draftkings.com/event/{event_id}"
-                        f"?outcomes={'+'.join(all_outcomes)}"
-                    )
-            except Exception:
-                pass
-
-        return parlay_url, name_to_url
-
-    # ── Fallback: individual Gambly URLs ─────────────────────────────────────
-    def _fallback(records, prompt):
-        for r2 in records:
-            name = r2.get("fighter") or r2.get("name") or ""
-            r2["dk_link"] = _gambly_url(name + " moneyline")
-        return records, {"dk": _gambly_url(prompt)}
-
-    # ── Main flow ─────────────────────────────────────────────────────────────
-    print("\n[V1 Gambly] Resolving DraftKings deep links via Gambly API...")
-
-    cookie_str = _get_cf_cookies()
-    if not cookie_str:
-        print("  [V1 Gambly] No cookies available — falling back to Gambly URLs")
-        names  = [r.get("fighter") or r.get("name") or "" for r in bet_records]
-        prompt = " and ".join(n + " moneyline" for n in names)
-        return _fallback(bet_records, prompt)
-
-    names  = [r.get("fighter") or r.get("name") or "" for r in bet_records]
-    prompt = " and ".join(n + " moneyline" for n in names)
-    print(f"  Moneylines ({len(bet_records)} bets): {prompt}")
-
-    parlay_url, name_to_url = _get_dk_links(prompt, names, cookie_str)
-
-    gurl_parlay = _gambly_url(prompt)
-    parlay_links = {"dk": parlay_url or gurl_parlay}
-    print(f"  {'✓' if parlay_url else '↩ fallback'}  Parlay DK: {parlay_links['dk']}")
-
-    for r2 in bet_records:
-        name   = r2.get("fighter") or r2.get("name") or ""
-        dk_url = name_to_url.get(name)
-        r2["dk_link"] = dk_url or _gambly_url(name + " moneyline")
-        status = "✓" if dk_url else "↩ fallback"
-        print(f"  {status}  {name}: {r2['dk_link']}")
-
-    print(f"  [V1 Gambly] Done — {len(bet_records)} bets resolved")
+    """DraftKings deep links for V1 bets (shared resolver — see dk_links.py)."""
+    bet_records, _, parlay_links = resolve_gambly_links(bet_records, [])
     return bet_records, parlay_links
 
 
@@ -773,7 +356,12 @@ def main():
 
     # 4. Load career stats
     print("\n[4] Loading career stats…")
-    career_df, _ = read_csv_from_github("data/career_styled_v1.csv", repo=V1_REPO)
+    # Prefer the bundle's current_stats (averages over ALL fights, i.e. the
+    # state going into this bout). career_styled_v1.csv rows are pre-fight
+    # snapshots, so its last row per fighter omits their most recent fight.
+    career_df = bundle.get("current_stats")
+    if career_df is None or career_df.empty:
+        career_df, _ = read_csv_from_github("data/career_styled_v1.csv", repo=V1_REPO)
     if career_df.empty:
         print("  [WARN] No career stats found — style fallback to Mixed")
 
@@ -794,9 +382,13 @@ def main():
         if not f1_stats or not f2_stats:
             print(f"    [SKIP] No career data found for {f1 if not f1_stats else f2}")
             continue
-        # Count rows in career_df = number of fights on record
-        f1_fights = len(career_df[career_df["fighter"].str.lower() == f1.lower()]) if not career_df.empty else 0
-        f2_fights = len(career_df[career_df["fighter"].str.lower() == f2.lower()]) if not career_df.empty else 0
+        # Number of UFC fights on record
+        def _n_fights(stats, name):
+            if "n_fights" in stats and pd.notna(stats["n_fights"]):
+                return int(stats["n_fights"])
+            return len(_fighter_rows(name, career_df))
+        f1_fights = _n_fights(f1_stats, f1)
+        f2_fights = _n_fights(f2_stats, f2)
         if f1_fights < MIN_FIGHTS or f2_fights < MIN_FIGHTS:
             short = f1 if f1_fights < MIN_FIGHTS else f2
             print(f"    [SKIP] Insufficient data for {short} ({min(f1_fights,f2_fights)} fights < {MIN_FIGHTS})")
@@ -812,8 +404,7 @@ def main():
         p2 = 1.0 - p1
 
         # Get odds
-        o1 = match_fighter_odds(f1, odds_dict)
-        o2 = match_fighter_odds(f2, odds_dict)
+        o1, o2 = match_bout_odds(f1, f2, odds_dict)
 
         for fighter, pred_prob, opp_prob, odds_raw, style, opp_style in [
             (f1, p1, p2, o1, f1_style, f2_style),
@@ -902,38 +493,39 @@ def run_test():
     # [2] BestFightOdds scraping (live)
     print("\n[2] BestFightOdds odds scraping...")
     try:
-        name = event_info[0] if event_info else "UFC"
-        odds_dict = scrape_bestfightodds(name)
-        if not odds_dict:
-            print("  ○ No odds found — expected if no upcoming event")
-        else:
-            sample = list(odds_dict.items())[:5]
-            print(f"  ✓ {len(odds_dict)} fighters with odds")
-            for fighter, odds in sample:
-                print(f"    {fighter}: {odds}")
+        odds_df = scrape_bestfightodds()
+        if odds_df.empty:
+            print("  ✗ No odds parsed from BestFightOdds"); all_pass = False
+        elif event_info:
+            found = 0
+            for b in event_info[2]:
+                o1, o2 = match_bout_odds(b["fighter1"], b["fighter2"], odds_df)
+                found += bool(o1 and o2)
+                print(f"    {b['fighter1']:26s} {str(o1):>6s} | {b['fighter2']:26s} {str(o2):>6s}")
+            print(f"  ✓ Both lines found for {found}/{len(event_info[2])} bouts")
     except Exception as e:
         print(f"  ✗ {e}"); all_pass = False
 
     # [3] Odds matching logic (offline)
     print("\n[3] Odds matching logic (offline)...")
     try:
-        # match_fighter_odds expects lowercased keys (mirrors scrape_bestfightodds output)
-        test_dict = {
-            "jon jones":        "+150",
-            "stipe miocic":     "-175",
-            "charles oliveira": "-200",
-        }
+        test_df = pd.DataFrame([
+            {"fighter": "Jean Silva",  "odds": "-150", "matchup_id": "1"},
+            {"fighter": "Jose Delgado", "odds": "+130", "matchup_id": "1"},
+            {"fighter": "Bruno Silva", "odds": "+200", "matchup_id": "2"},
+            {"fighter": "Edgar Chairez", "odds": "-240", "matchup_id": "2"},
+        ])
         cases = [
-            ("Jon Jones",         "+150"),   # casing normalised internally
-            ("jones",             "+150"),   # partial last name
-            ("Unknown Fighter",   None),     # no match
+            (("Jean Silva", "Jose Delgado"), ("-150", "+130")),
+            (("Bruno Silva", "Edgar Chairez"), ("+200", "-240")),
+            (("José Delgado", "Jean Silva"), ("+130", "-150")),   # accents / order
+            (("Unknown Fighter", "Other Guy"), (None, None)),
         ]
-        all_match = True
-        for name, expected in cases:
-            got = match_fighter_odds(name, test_dict)
-            ok  = got == expected
-            print(f"  {'✓' if ok else '✗'}  '{name}' → {got!r} (expect {expected!r})")
-            if not ok: all_match = False; all_pass = False
+        for (a, b), expected in cases:
+            got = match_bout_odds(a, b, test_df)
+            ok  = tuple(got) == expected
+            print(f"  {'✓' if ok else '✗'}  {a} vs {b} → {got} (expect {expected})")
+            if not ok: all_pass = False
     except Exception as e:
         print(f"  ✗ {e}"); all_pass = False
 

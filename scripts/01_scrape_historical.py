@@ -35,6 +35,11 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from tqdm import tqdm
 
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ufcstats_browser import (fetch_soup, SEL_EVENT_LIST, SEL_EVENT_PAGE,
+                              SEL_FIGHT_PAGE, SEL_FIGHTER_PAGE)
+
 # ── GitHub config ─────────────────────────────────────────────────────────────
 GITHUB_TOKEN = os.environ.get("ZWINSHIP_PAT")  # optional — upload to GitHub is manual
 REPO_OWNER  = "zwinship"
@@ -59,20 +64,24 @@ _SESSION.headers.update(HEADERS)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _wait_selector_for(url):
+    if "/fight-details/" in url:
+        return SEL_FIGHT_PAGE
+    if "/fighter-details/" in url:
+        return SEL_FIGHTER_PAGE
+    if "/event-details/" in url:
+        return SEL_EVENT_PAGE
+    return SEL_EVENT_LIST
+
+
 def get_soup(url, retries=3, delay=1.2):
-    for attempt in range(retries):
-        try:
-            resp = _SESSION.get(url, timeout=20, allow_redirects=True)
-            if resp.status_code == 200:
-                time.sleep(delay)
-                return BeautifulSoup(resp.text, "lxml")
-            else:
-                print(f"  [WARN] HTTP {resp.status_code} for {url}")
-        except Exception as e:
-            print(f"  [WARN] Attempt {attempt+1} failed for {url}: {e}")
-            time.sleep(delay * 2)
-    print(f"  [ERROR] Could not fetch: {url}")
-    return None
+    # UFCStats serves a JavaScript browser check to plain HTTP clients, so
+    # pages are loaded in headless Chromium and only accepted once the
+    # expected content has rendered.
+    soup = fetch_soup(url, _wait_selector_for(url), retries=retries, delay=min(delay, 0.5))
+    if soup is None:
+        print(f"  [ERROR] Could not fetch: {url}")
+    return soup
 
 
 def parse_stat(value_str):
@@ -245,9 +254,22 @@ def parse_fight_page(fight_url, event_name, event_date, event_location):
     if len(fighter_names) < 2:
         return []
 
-    tables     = soup.select(".b-fight-details__table")
-    totals_tds = None
-    sig_tds    = None
+    # The page has four stat tables: Totals, Totals-per-round, Significant
+    # Strikes, Sig-Strikes-per-round. The per-round ones carry the
+    # "b-fight-details__table js-fight-table" classes; the full-fight totals
+    # tables have no class. Selecting ".b-fight-details__table" therefore
+    # returned the per-round tables, whose first row is ROUND 1 ONLY.
+    def _is_per_round(t):
+        return "js-fight-table" in (t.get("class") or [])
+
+    def _heads(t):
+        return " ".join(th.get_text(" ", strip=True).lower() for th in t.select("thead th"))
+
+    full_tables = [t for t in soup.find_all("table") if not _is_per_round(t) and t.select("thead th")]
+    totals_tbl  = next((t for t in full_tables if "kd" in _heads(t).split()), None)
+    sig_tbl     = next((t for t in full_tables if "head" in _heads(t) and "leg" in _heads(t)), None)
+    totals_tds  = None
+    sig_tds     = None
 
     def get_data_row(table):
         if table is None:
@@ -258,8 +280,8 @@ def parse_fight_page(fight_url, event_name, event_date, event_location):
                 return tds
         return None
 
-    if len(tables) > 0: totals_tds = get_data_row(tables[0])
-    if len(tables) > 1: sig_tds    = get_data_row(tables[1])
+    totals_tds = get_data_row(totals_tbl)
+    sig_tds    = get_data_row(sig_tbl)
 
     # ── Scorecard margin: sum of per-judge |winner_score - loser_score| ─────
     # Scores on UFCStats are always listed as fighter[0]_score - fighter[1]_score

@@ -36,6 +36,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 
 # Break-even threshold: account for typical bookmaker margin (~4%)
 BREAKEVEN_THRESHOLD = 0.96
@@ -52,7 +54,7 @@ def read_csv(repo_path):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None
@@ -228,12 +230,16 @@ def overall_performance(df):
     total_staked   = float(bet_df["bet_size"].sum())
     total_returned = float(bet_df["total_return"].sum())
     net            = total_returned - total_staked
+    # Pushes (cancelled bout / draw / no contest: stake returned) are neither
+    # wins nor losses
+    push    = (bet_df["won"] == 0) & (bet_df["total_return"].round(4) == bet_df["bet_size"].round(4))
+    decided = bet_df[~push]
 
     return {
         "total_bets":    int(len(bet_df)),
-        "total_wins":    int(bet_df["won"].sum()),
-        "total_losses":  int((bet_df["won"] == 0).sum()),
-        "win_rate_pct":  round(float(bet_df["won"].mean()) * 100, 2),
+        "total_wins":    int(decided["won"].sum()),
+        "total_losses":  int((decided["won"] == 0).sum()),
+        "win_rate_pct":  round(float(decided["won"].mean()) * 100, 2) if len(decided) else 0.0,
         "units_staked":  round(total_staked, 2),
         "units_returned": round(total_returned, 2),
         "net_units":     round(net, 2),

@@ -26,6 +26,10 @@ from datetime import datetime, timedelta
 
 # ── Config ────────────────────────────────────────────────────────────────────
 import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from name_match import match_name
+from ufcstats_browser import fetch_html, SEL_EVENT_LIST
+from ufcstats_results import event_list_rows, get_event_results, get_winners_from_event
 GITHUB_TOKEN = os.environ.get("ZWINSHIP_PAT")
 if not GITHUB_TOKEN and "--test" not in _sys.argv:
     raise EnvironmentError("ZWINSHIP_PAT environment variable is not set.")
@@ -35,6 +39,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept":        "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -59,7 +65,7 @@ def read_csv_from_github(repo_path, repo=V1_REPO):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None
@@ -88,108 +94,33 @@ def get_recent_completed_event():
     """Return (event_name, event_date, event_url) for the most recent completed UFC event
     within the last 8 days, or None if not found."""
     from datetime import timezone
-    url  = f"{BASE_URL}/statistics/events/completed"
-    resp = requests.get(url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
-        return None
-
-    soup     = BeautifulSoup(resp.text, "lxml")
-    rows     = soup.select("tr.b-statistics__table-row")
+    html = fetch_html(f"{BASE_URL}/statistics/events/completed", SEL_EVENT_LIST)
+    if not html:
+        raise RuntimeError("UFCStats completed-events page did not load "
+                           "(browser check not cleared) — refusing to report 'no event'.")
     today    = datetime.now(timezone.utc).date()
     week_ago = today - timedelta(days=8)
-
-    for row in rows:
-        if row.find("th"):
-            continue
-        tds = row.find_all("td")
-        if not tds:
-            continue
-        link_el   = tds[0].select_one("i.b-statistics__table-content a")
-        date_span = tds[0].select_one("span.b-statistics__date")
-        if not link_el or not date_span:
-            continue
-        date_text = date_span.get_text(strip=True)
-        try:
-            event_date = datetime.strptime(date_text, "%B %d, %Y").date()
-        except ValueError:
-            try:
-                event_date = datetime.strptime(date_text, "%b. %d, %Y").date()
-            except ValueError:
-                continue
-
-        if week_ago <= event_date <= today:
-            return link_el.get_text(strip=True), event_date, link_el.get("href", "")
-
-    return None
-
-
-def _scrape_fight_winner_from_page(fight_url):
-    """Scrape the winner from an individual fight detail page (fallback)."""
-    import time
-    time.sleep(0.8)
-    resp = requests.get(fight_url, headers=SCRAPE_HEADERS, timeout=15)
-    if resp.status_code != 200:
-        return None
-    soup = BeautifulSoup(resp.text, "lxml")
-    for person_el in soup.select(".b-fight-details__person"):
-        status = person_el.select_one(".b-fight-details__person-status")
-        name   = person_el.select_one(".b-fight-details__person-name a")
-        if status and name and status.get_text(strip=True).upper() == "W":
-            return name.get_text(strip=True)
+    for ev in event_list_rows(html):
+        # The completed list also shows the next upcoming event at the top
+        if week_ago <= ev["date"] <= today:
+            return ev["name"], ev["date"], ev["url"]
     return None
 
 
 def scrape_fight_results(event_url):
-    """
-    Scrape the winner of each fight from a UFCStats event page.
-    Returns dict: {fighter_name_lower: "W" or "L"}
-    Mirrors V2's get_winners_from_event() exactly, including tds[1]
-    fallback and individual fight page fallback.
-    """
-    resp = requests.get(event_url, headers=SCRAPE_HEADERS, timeout=15, allow_redirects=True)
-    if resp.status_code != 200:
-        return {}
-
-    soup    = BeautifulSoup(resp.text, "lxml")
-    results = {}
-
-    for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
-        tds = row.find_all("td")
-        if not tds:
-            continue
-        fighter_links = tds[0].select("p a.b-link") or (tds[1].select("p a.b-link") if len(tds) > 1 else [])
-        if len(fighter_links) >= 2:
-            winner = fighter_links[0].get_text(strip=True)
-            loser  = fighter_links[1].get_text(strip=True)
-            results[winner.lower()] = "W"
-            results[loser.lower()]  = "L"
-        else:
-            fight_link = row.get("data-link", "")
-            if fight_link:
-                winner = _scrape_fight_winner_from_page(fight_link)
-                if winner:
-                    results[winner.lower()] = "W"
-
-    return results
+    """{fighter_name_lower: 'W' | 'L' | 'D' | 'NC'} for every fighter who fought."""
+    return get_winners_from_event(event_url)
 
 
 # ── Match names ───────────────────────────────────────────────────────────────
 
 def match_result(fighter_name, results_dict):
-    """Fuzzy-match a fighter name to the results dict."""
-    if not fighter_name or not fighter_name.strip():
+    """Result for a fighter, or None when they are not on the results card
+    (bout cancelled). Last-name matches are only used when unambiguous."""
+    if not fighter_name or not str(fighter_name).strip():
         return None
-    name_l = fighter_name.lower().strip()
-    if name_l in results_dict:
-        return results_dict[name_l]
-    parts = name_l.split()
-    if not parts:
-        return None
-    last = parts[-1]
-    for k, v in results_dict.items():
-        if last in k:
-            return v
-    return None
+    hit = match_name(fighter_name, list(results_dict))
+    return results_dict[hit] if hit is not None else None
 
 
 # ── P&L computation ───────────────────────────────────────────────────────────
@@ -208,6 +139,8 @@ def compute_pnl(row):
     bet   = int(row.get("bet_size", 0))
     if bet == 0:
         return 0.0
+    if row.get("result") not in ("W", "L"):
+        return 0.0   # cancelled bout, draw or no contest → stake returned
     won   = row.get("result") == "W"
     # Handle both 'Odds' and 'odds' column names
     odds  = row.get("Odds") if row.get("Odds") is not None else row.get("odds")
@@ -233,29 +166,29 @@ def main():
     event_name, event_date, event_url = event_info
     print(f"  Found: {event_name} ({event_date})")
 
-    # 2. Load predictions for this event
+    # 2. Load predictions for this event (the event-specific file written by
+    #    v1_predict.py — never v1_predictions_latest.csv, which may belong to
+    #    an older card if predictions did not run this week)
     print("\n[2] Loading V1 predictions from UFC_Model repo…")
-    preds, _ = read_csv_from_github("predictions/v1_predictions_latest.csv")
+    safe_name = re.sub(r"[^a-z0-9_]", "_", event_name.lower())
+    preds, _ = read_csv_from_github(f"predictions/v1_predictions_{safe_name}.csv")
     if preds.empty:
-        print("  No V1 predictions found. Exiting.")
+        print(f"  No V1 predictions for {event_name} (predictions/v1_predictions_{safe_name}.csv). Exiting.")
         return
     print(f"  Loaded {len(preds)} rows")
 
-    # Verify predictions match this event (check event name overlap)
-    if "event" in preds.columns:
-        events_in_preds = preds["event"].dropna().unique()
-        match = any(event_name.lower()[:15] in e.lower() for e in events_in_preds)
-        if not match:
-            print(f"  [WARN] Predictions don't match event name '{event_name}' — proceeding anyway")
-
     # 3. Scrape fight results
     print("\n[3] Scraping fight results from UFCStats…")
+    bouts   = get_event_results(event_url)
+    pending = [f"{b['fighter_1']} vs {b['fighter_2']}" for b in bouts if b["outcome"] is None]
+    if pending:
+        raise RuntimeError(f"UFCStats has not posted results for: {', '.join(pending)} — "
+                           "not writing partial results.")
     results_dict = scrape_fight_results(event_url)
     print(f"  Scraped results for {len(results_dict)} fighters")
 
     if not results_dict:
-        print("  [ERROR] No results scraped. Exiting.")
-        return
+        raise RuntimeError("No results scraped from the event page.")
 
     # 4. Match results to predictions
     print("\n[4] Matching results to predictions…")
@@ -263,6 +196,8 @@ def main():
     preds["result"] = preds[fighter_col].apply(lambda n: match_result(n, results_dict))
     matched = preds["result"].notna().sum()
     print(f"  Matched {matched}/{len(preds)} fighters")
+    # Fighters missing from the results card → bout cancelled (stake returned)
+    preds["result"] = preds["result"].fillna("VOID")
 
     # 5. Compute P&L
     preds["net"] = preds.apply(compute_pnl, axis=1)
@@ -309,7 +244,6 @@ def main():
     )
 
     # Also write event-specific results file
-    safe_name = re.sub(r"[^a-z0-9_]", "_", event_name.lower())
     write_csv_to_github(
         preds,
         f"results/v1_results_{safe_name}.csv",
@@ -409,6 +343,8 @@ def run_test():
     print(f"OVERALL: {'✓ ALL TESTS PASSED' if all_pass else '✗ SOME TESTS FAILED — see above'}")
     print("=" * 60)
     print("=== END TEST ===")
+    if not all_pass:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

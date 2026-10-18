@@ -25,7 +25,12 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from name_match import match_name, norm_name, last_name
+from ufcstats_browser import fetch_html, SEL_EVENT_LIST, SEL_EVENT_PAGE
+from ufcstats_results import event_list_rows as _event_list_rows, get_event_results, get_winners_from_event
 
 # ── Config ────────────────────────────────────────────────────────────────────
 import sys as _sys
@@ -38,6 +43,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -62,7 +69,7 @@ def github_get(repo_path):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         return (raw_resp.text if raw_resp.status_code == 200 else None), sha
     return base64.b64decode(raw_content).decode("utf-8"), sha
 
@@ -98,106 +105,28 @@ def write_csv(df, repo_path, message, sha=None):
 
 # ── Step 1: Find most recent completed event ──────────────────────────────────
 
-def _playwright_get_html(url, wait_selector, timeout_ms=20000):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page    = browser.new_page(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        )
-        try:
-            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
-            page.wait_for_selector(wait_selector, timeout=timeout_ms)
-        except PWTimeout:
-            print(f"  [WARN] Playwright timed out waiting for {wait_selector} on {url}")
-        except Exception as e:
-            print(f"  [WARN] Playwright navigation error: {e}")
-        html = page.content()
-        browser.close()
-        return html
-
-
 def get_recent_completed_event():
     url  = f"{BASE_URL}/statistics/events/completed"
     print("  Fetching UFCStats completed events (Playwright)...")
-    html = _playwright_get_html(url, "tr.b-statistics__table-row")
+    html = fetch_html(url, SEL_EVENT_LIST)
     if not html:
-        return None
-    soup     = BeautifulSoup(html, "lxml")
-    rows     = soup.select("tr.b-statistics__table-row")
+        raise RuntimeError("UFCStats completed-events page did not load "
+                           "(browser check not cleared) — refusing to report 'no event'.")
     today    = datetime.now(timezone.utc).date()
     week_ago = today - timedelta(days=7)
-    for row in rows:
-        if row.find("th"):
-            continue
-        tds = row.find_all("td")
-        if not tds:
-            continue
-        link_el   = tds[0].select_one("i.b-statistics__table-content a")
-        date_span = tds[0].select_one("span.b-statistics__date")
-        if not link_el or not date_span:
-            continue
-        date_text = date_span.get_text(strip=True)
-        try:
-            event_date = datetime.strptime(date_text, "%B %d, %Y").date()
-        except ValueError:
-            try:
-                event_date = datetime.strptime(date_text, "%b. %d, %Y").date()
-            except ValueError:
-                continue
-        if week_ago <= event_date <= today:
-            return {
-                "name": link_el.get_text(strip=True),
-                "date": event_date.isoformat(),
-                "url":  link_el.get("href", ""),
-            }
-    return None
-
-
-def get_winners_from_event(event_url):
-    print(f"  Fetching event results page (Playwright): {event_url}")
-    html = _playwright_get_html(event_url, "tr.b-fight-details__table-row")
-    if not html:
-        return {}
-    soup    = BeautifulSoup(html, "lxml")
-    results = {}
-    for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
-        tds = row.find_all("td")
-        if not tds:
-            continue
-        fighter_links = tds[0].select("p a.b-link")
-        if len(fighter_links) >= 2:
-            winner = fighter_links[0].get_text(strip=True)
-            loser  = fighter_links[1].get_text(strip=True)
-            results[winner.lower()] = "W"
-            results[loser.lower()]  = "L"
-        else:
-            fight_link = row.get("data-link", "")
-            if fight_link:
-                winner = _scrape_fight_winner(fight_link)
-                if winner:
-                    results[winner.lower()] = "W"
-    return results
-
-
-def _scrape_fight_winner(fight_url):
-    """Scrape the winner from an individual fight page."""
-    html = _playwright_get_html(fight_url, ".b-fight-details__person")
-    if not html:
-        return None
-    soup = BeautifulSoup(html, "lxml")
-    for person_el in soup.select(".b-fight-details__person"):
-        status = person_el.select_one(".b-fight-details__person-status")
-        name   = person_el.select_one(".b-fight-details__person-name a")
-        if status and name and status.get_text(strip=True).upper() == "W":
-            return name.get_text(strip=True)
+    for ev in _event_list_rows(html):
+        # The completed list also shows the next upcoming event at the top
+        if week_ago <= ev["date"] <= today:
+            return {"name": ev["name"], "date": ev["date"].isoformat(), "url": ev["url"]}
     return None
 
 
 # ── Step 3-4: Match results to predictions and compute P&L ───────────────────
+
+def _bet_result(name, winners):
+    """'W' | 'L' | 'D' | 'NC', or None when the fighter is not on the results card."""
+    hit = match_name(name, list(winners))
+    return winners[hit] if hit is not None else None
 
 def calculate_pnl(row, bet_size_col="bet_size", odds_col="odds_numeric"):
     """
@@ -228,112 +157,60 @@ def calculate_pnl(row, bet_size_col="bet_size", odds_col="odds_numeric"):
 
 def get_fight_methods(event_url):
     """
-    Return dict of {(winner_lower, loser_lower): method} for each fight.
+    fight_methods:   frozenset({fighter_a_lower, fighter_b_lower}) → method
+    winner_by_fight: frozenset → winner_lower (None for draws / no contests)
     method is one of: 'KO/TKO', 'Submission', 'Decision', 'No Contest', 'DQ'
-
-    Also returns set of all fights as frozensets so we can look up fight-level props.
-    fight_methods: dict keyed by frozenset({fighter_a_lower, fighter_b_lower}) → method
-    winner_by_fight: dict keyed by frozenset → winner_lower
     """
-    resp = requests.get(event_url, headers=SCRAPE_HEADERS, timeout=15, allow_redirects=True)
-    if resp.status_code != 200:
-        return {}, {}
-
-    soup = BeautifulSoup(resp.text, "lxml")
-    fight_methods  = {}
+    fight_methods   = {}
     winner_by_fight = {}
-
-    for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
-        tds = row.find_all("td")
-        if len(tds) < 8:
+    for b in get_event_results(event_url):
+        if b["outcome"] is None:
             continue
-
-        fighter_links = tds[0].select("p a.b-link") or tds[1].select("p a.b-link")
-        if len(fighter_links) < 2:
-            continue
-
-        winner = fighter_links[0].get_text(strip=True).lower()
-        loser  = fighter_links[1].get_text(strip=True).lower()
-        key    = frozenset([winner, loser])
-
-        # Method is typically in td index 7 or 8 depending on layout
-        method_raw = ""
-        for td_idx in [7, 8, 6]:
-            if td_idx < len(tds):
-                t = tds[td_idx].get_text(strip=True)
-                if t:
-                    method_raw = t
-                    break
-
-        method_raw = method_raw.upper()
-        if "KO" in method_raw or "TKO" in method_raw:
-            method = "KO/TKO"
-        elif "SUB" in method_raw:
-            method = "Submission"
-        elif "DEC" in method_raw:
-            method = "Decision"
-        elif "NC" in method_raw or "NO CONTEST" in method_raw:
-            method = "No Contest"
-        elif "DQ" in method_raw or "DISQUALIF" in method_raw:
-            method = "DQ"
-        else:
-            method = method_raw or "Unknown"
-
-        fight_methods[key]   = method
-        winner_by_fight[key] = winner
-
+        key = frozenset([b["fighter_1"].lower(), b["fighter_2"].lower()])
+        fight_methods[key]   = "Draw" if b["outcome"] == "draw" else b["method"]
+        winner_by_fight[key] = b["fighter_1"].lower() if b["outcome"] == "win" else None
     return fight_methods, winner_by_fight
+
+
+def _find_fight(fa, fb, fight_methods):
+    """Key in fight_methods for the bout between fa and fb (both must match)."""
+    for key in fight_methods:
+        names = list(key)
+        ma, mb = match_name(fa, names), match_name(fb, names)
+        if ma and mb and ma != mb:
+            return key
+    return None
 
 
 def _prop_won(prop_row, fight_methods, winner_by_fight):
     """
     Determine if a prop bet won based on actual fight result.
 
-    Returns 1 (win), 0 (loss), or None (fight not found / no contest).
+    Returns 1 (win), 0 (loss), or None (fight not found / no contest → void).
     """
-    fa   = (prop_row.get("fighter_a") or "").lower()
-    fb   = (prop_row.get("fighter_b") or "").lower()
-    pt   = prop_row.get("prop_type", "")
-    key  = frozenset([fa, fb])
+    fa  = str(prop_row.get("fighter_a") or "")
+    fb  = str(prop_row.get("fighter_b") or "")
+    pt  = prop_row.get("prop_type", "")
+    key = _find_fight(fa, fb, fight_methods)
+    if key is None:
+        return None  # bout cancelled / not on the card → void
 
-    # Try exact match first, then last-name fallback
-    method  = fight_methods.get(key)
-    winner  = winner_by_fight.get(key)
-
-    if method is None:
-        # Last-name fallback
-        for k, m in fight_methods.items():
-            kl = list(k)
-            if (fa.split()[-1] if fa else "") in kl[0] + kl[1] or \
-               (fb.split()[-1] if fb else "") in kl[0] + kl[1]:
-                method = m
-                winner = winner_by_fight.get(k)
-                break
-
-    if method is None or method in ("No Contest", "Unknown"):
-        return None  # treat as void
-
-    fighter_name = (prop_row.get("fighter") or "").lower()
+    method = fight_methods.get(key)
+    winner = winner_by_fight.get(key)
+    if method in (None, "No Contest", "Unknown"):
+        return None
 
     if pt == "fight_goes_distance":
-        return 1 if method == "Decision" else 0
+        return 1 if method in ("Decision", "Draw") else 0
+    if pt == "fight_inside_distance":
+        return 0 if method in ("Decision", "Draw") else 1
 
-    elif pt == "fight_inside_distance":
-        return 1 if method != "Decision" else 0
-
-    elif pt in ("fighter_a_ko", "fighter_b_ko"):
-        return 1 if (winner and fighter_name and winner.split()[-1] in fighter_name
-                     and method == "KO/TKO") else 0
-
-    elif pt in ("fighter_a_sub", "fighter_b_sub"):
-        return 1 if (winner and fighter_name and winner.split()[-1] in fighter_name
-                     and method == "Submission") else 0
-
-    elif pt in ("fighter_a_dec", "fighter_b_dec"):
-        return 1 if (winner and fighter_name and winner.split()[-1] in fighter_name
-                     and method == "Decision") else 0
-
-    return 0
+    wanted = {"ko": "KO/TKO", "sub": "Submission", "dec": "Decision"}.get(pt.rsplit("_", 1)[-1])
+    if wanted is None:
+        return 0
+    fighter = str(prop_row.get("fighter") or "")
+    won_fight = bool(winner) and match_name(fighter, [winner]) is not None
+    return 1 if (won_fight and method == wanted) else 0
 
 
 def track_prop_results(prop_df, fight_methods, winner_by_fight, event, clean_title):
@@ -437,7 +314,86 @@ def track_prop_results(prop_df, fight_methods, winner_by_fight, event, clean_tit
         sha=master_sha,
     )
 
-def _track_parlay_result(pred_df, winners, event, clean_title):
+def _prop_payout(row, won_val):
+    """(total_return, net, profit_multiplier) for one prop bet."""
+    bet = float(row.get("bet_size", 0) or 0)
+    try:
+        imp = float(row.get("market_implied_prob") or 0)
+    except (TypeError, ValueError):
+        imp = 0.0
+    decimal_odds = 1.0 / imp if 0 < imp < 1 else 2.0
+    if won_val is None:
+        total_return, net = bet, 0.0
+    elif won_val == 1:
+        net          = round((decimal_odds - 1) * bet, 4)
+        total_return = round(bet + net, 4)
+    else:
+        total_return, net = 0.0, round(-bet, 4)
+    return total_return, net, (round(total_return / bet, 4) if bet > 0 else 0.0)
+
+
+def regrade_ungraded_props(dry_run=False):
+    """
+    Grade prop bets that were recorded as void because the old requests-based
+    method scraper was blocked by UFCStats' browser check (every event from
+    Noche UFC 2026 onward was affected). Re-reads each event page with
+    Playwright and grades with the same rules as track_prop_results.
+    Bets that are genuinely void (cancelled bout / no contest) stay void.
+    """
+    master, master_sha = read_csv("results/v2_all_prop_results.csv")
+    if master.empty or "won" not in master.columns:
+        return
+    todo = master[master["won"].isna() & (pd.to_numeric(master["bet_size"], errors="coerce") > 0)]
+    if todo.empty:
+        print("  No ungraded prop bets.")
+        return
+    print(f"  {len(todo)} ungraded prop bets across {todo['event_name'].nunique()} events")
+
+    html = fetch_html(f"{BASE_URL}/statistics/events/completed?page=all", SEL_EVENT_LIST)
+    if not html:
+        print("  [WARN] Could not load UFCStats event list — skipping regrade")
+        return
+    event_urls = {norm_name(e["name"]): e["url"] for e in _event_list_rows(html)}
+
+    changed = 0
+    for event_name, grp in todo.groupby("event_name"):
+        url = event_urls.get(norm_name(event_name))
+        if not url:
+            print(f"  [WARN] {event_name}: not found on UFCStats")
+            continue
+        fight_methods, winner_by_fight = get_fight_methods(url)
+        for idx, row in grp.iterrows():
+            won_val = _prop_won(row, fight_methods, winner_by_fight)
+            if won_val is None:
+                continue
+            tr, net, pm = _prop_payout(row, won_val)
+            print(f"    {event_name[:38]:38s} {row['prop_label'][:42]:42s} → "
+                  f"{'WON ' if won_val else 'LOST'} {net:+.2f}u")
+            if not dry_run:
+                master.loc[idx, ["won", "total_return", "net", "profit_multiplier"]] = [won_val, tr, net, pm]
+            changed += 1
+
+    print(f"  Regraded {changed} prop bets{' (dry run — nothing written)' if dry_run else ''}")
+    if dry_run or not changed:
+        return
+    write_csv(master, "results/v2_all_prop_results.csv",
+              f"Regrade previously ungraded V2 prop results ({changed} bets)", sha=master_sha)
+    for event_name, grp in master[master.index.isin(todo.index)].groupby("event_name"):
+        clean = re.sub(r"[^\w\s]", "", event_name).replace(" ", "_")
+        per_event, sha = read_csv(f"results/v2_prop_results_{clean}.csv")
+        if per_event.empty:
+            continue
+        cols      = ["won", "total_return", "net", "profit_multiplier"]
+        key       = ["prop_label", "fighter_a", "fighter_b"]
+        col_order = list(per_event.columns)
+        per_event = per_event.set_index(key)
+        per_event.update(grp.set_index(key)[cols])
+        write_csv(per_event.reset_index()[col_order],
+                  f"results/v2_prop_results_{clean}.csv",
+                  f"Regrade V2 prop results: {event_name}", sha=sha)
+
+
+def _track_parlay_result(pred_df, results, event, clean_title):
     """
     Check if the OCTASTATS PARLAY (all bet legs) hit, and append to parlay results CSV.
     A parlay wins only if every single bet leg in that event was correct.
@@ -460,22 +416,31 @@ def _track_parlay_result(pred_df, winners, event, clean_title):
         print("  No parlay data in predictions — skipping")
         return
 
-    # Did every leg win?
+    # Did every leg win? A void leg (cancelled / draw / NC) drops out of the
+    # parlay and its price is removed from the combined odds.
     legs = []
+    combined_dec = (parlay_combined_odds / 100 + 1) if parlay_combined_odds > 0 \
+        else (100 / abs(parlay_combined_odds) + 1)
     for _, row in bet_rows.iterrows():
-        name = str(row.get("name") or row.get("fighter") or "").lower()
-        won  = name in winners
-        legs.append({"name": row.get("name") or row.get("fighter"), "won": won})
+        name   = row.get("name") or row.get("fighter")
+        result = results.get(name)
+        if result not in ("W", "L"):
+            o = float(row.get("odds_numeric") or 0)
+            if o:
+                combined_dec /= (o / 100 + 1) if o > 0 else (100 / abs(o) + 1)
+            legs.append({"name": name, "won": None})
+            continue
+        legs.append({"name": name, "won": result == "W"})
 
-    all_won = all(l["won"] for l in legs)
+    live_legs = [l for l in legs if l["won"] is not None]
+    all_won   = bool(live_legs) and all(l["won"] for l in live_legs)
 
     # Compute parlay P&L
-    if all_won:
-        if parlay_combined_odds > 0:
-            winnings = (parlay_combined_odds / 100) * parlay_bet_size
-        else:
-            winnings = (100 / abs(parlay_combined_odds)) * parlay_bet_size
-        net = round(winnings, 4)
+    if not live_legs:
+        net, total_return = 0.0, round(parlay_bet_size, 4)
+    elif all_won:
+        winnings     = (combined_dec - 1) * parlay_bet_size
+        net          = round(winnings, 4)
         total_return = round(parlay_bet_size + winnings, 4)
     else:
         net = round(-parlay_bet_size, 4)
@@ -492,7 +457,8 @@ def _track_parlay_result(pred_df, winners, event, clean_title):
         "all_won":         int(all_won),
         "net":             net,
         "total_return":    total_return,
-        "leg_detail":      " | ".join(f"{l['name']} ({'W' if l['won'] else 'L'})" for l in legs),
+        "leg_detail":      " | ".join(
+            f"{l['name']} ({'VOID' if l['won'] is None else 'W' if l['won'] else 'L'})" for l in legs),
     }
 
     print(f"  Parlay legs: {parlay_row['leg_detail']}")
@@ -526,7 +492,9 @@ def main():
     print("\n[1] Checking for recent completed UFC event...")
     event = get_recent_completed_event()
     if event is None:
-        print("  No UFC event found in the last 7 days. Exiting.")
+        print("  No UFC event found in the last 7 days.")
+        print("\n[5c] Checking for previously ungraded prop bets...")
+        regrade_ungraded_props()
         return
     print(f"  Event: {event['name']} ({event['date']})")
 
@@ -544,29 +512,22 @@ def main():
 
         # 3. Scrape winners + fight methods
         print("\n[3] Scraping fight results from UFCStats...")
+        bouts = get_event_results(event["url"])
+        pending = [f"{b['fighter_1']} vs {b['fighter_2']}" for b in bouts if b["outcome"] is None]
+        if pending:
+            print(f"  [ERROR] UFCStats has not posted results for: {', '.join(pending)}")
+            print("  Not writing partial results — re-run once the event page is complete.")
+            raise SystemExit(1)
         winners = get_winners_from_event(event["url"])
         fight_methods, winner_by_fight = get_fight_methods(event["url"])
-        print(f"  Found {len(winners)} winners: {', '.join(sorted(winners))}")
+        print(f"  Found {len(bouts)} bouts, {sum(v == 'W' for v in winners.values())} winners: "
+              f"{', '.join(sorted(k for k, v in winners.items() if v == 'W'))}")
         print(f"  Found {len(fight_methods)} fight methods")
 
         # 4. Match winners and compute P&L
         print("\n[4] Computing P&L...")
-        def _match_winner(name, winners_dict):
-            """Return 1 if fighter won, 0 otherwise. Case-insensitive + last-name fallback."""
-            if not name:
-                return 0
-            name_l = name.lower().strip()
-            # Exact match
-            if name_l in winners_dict:
-                return 1 if winners_dict[name_l] == "W" else 0
-            # Last-name fallback
-            last = name_l.split()[-1]
-            for k, v in winners_dict.items():
-                if last and last in k:
-                    return 1 if v == "W" else 0
-            return 0  # not found / cancelled
-
-        pred_df["won"] = pred_df["name"].apply(lambda x: _match_winner(x, winners))
+        pred_df["_result"] = pred_df["name"].apply(lambda n: _bet_result(n, winners))
+        pred_df["won"]     = (pred_df["_result"] == "W").astype(int)
 
         # Only compute P&L for rows where we placed a bet
         pred_df["potential_winnings"] = 0.0
@@ -578,12 +539,19 @@ def main():
         for idx, row in bet_rows.iterrows():
             if pd.isna(row.get("odds_numeric")):
                 continue
+            if row["_result"] not in ("W", "L"):
+                # Cancelled bout, draw or no contest → moneyline is a push
+                print(f"  ↺ {row['name']}: {row['_result'] or 'bout not on card'} — stake returned")
+                pred_df.at[idx, "total_return"]      = float(row["bet_size"])
+                pred_df.at[idx, "profit_multiplier"] = 1.0
+                continue
             w, tr, n, pm = calculate_pnl(row)
             pred_df.at[idx, "potential_winnings"] = w
             pred_df.at[idx, "total_return"]       = tr
             pred_df.at[idx, "net"]                = n
             pred_df.at[idx, "profit_multiplier"]  = pm
 
+        results_by_name = dict(zip(pred_df["name"], pred_df.pop("_result")))
         pred_df["event_name"]  = event["name"]
         pred_df["result_date"] = datetime.now().strftime("%Y-%m-%d")
 
@@ -641,7 +609,12 @@ def main():
 
     # 6b. Track parlay result
     print("\n[5b] Tracking parlay result...")
-    _track_parlay_result(pred_df, winners, event, clean_title)
+    if not pred_df.empty:
+        _track_parlay_result(pred_df, results_by_name, event, clean_title)
+
+    # 6c. Grade any older prop bets that were left ungraded
+    print("\n[5c] Checking for previously ungraded prop bets...")
+    regrade_ungraded_props()
 
     # 7. Update fight_titles.json
     print("\n[6] Updating fight_titles.json...")
@@ -664,113 +637,48 @@ def main():
 
 def run_test():
     """
-    --test mode: verify UFCStats results scraping + fight-existence logic.
+    --test mode: live UFCStats results parsing + offline matching logic.
     No GitHub writes.
-    Tests:
-      1. UFCStats recent event detection (live)
-      2. Winners scraping from event page (live, if event found)
-      3. fight-existence / match_result logic (offline)
-      4. Prediction file matching logic (offline)
     """
     print("=== TEST MODE: 05_scrape_results ===\n")
     all_pass = True
 
-    # [1] Recent event detection (live)
-    print("[1] Looking for recent completed event (within last 7 days)...")
+    print("[1] Recent completed event detection (live)...")
     event = get_recent_completed_event()
-    if event is None:
-        print("  ○ No event in last 7 days — expected mid-week")
-        print("  ✓ Function returned None cleanly")
+    print(f"  {'✓ Found: ' + event['name'] + ' (' + event['date'] + ')' if event else '○ No event in last 7 days'}")
+
+    print("\n[2] Parsing the most recent completed event page (live)...")
+    html = fetch_html(f"{BASE_URL}/statistics/events/completed", SEL_EVENT_LIST)
+    today = datetime.now(timezone.utc).date()
+    past = [e for e in _event_list_rows(html or "") if e["date"] <= today]
+    if not past:
+        print("  ✗ Could not load completed events"); all_pass = False
     else:
-        name = event["name"]
-        date = event["date"]
-        url  = event["url"]
-        print(f"  ✓ Found: {name} ({date})")
+        ev = past[0]
+        bouts = get_event_results(ev["url"])
+        print(f"  {ev['name']} ({ev['date']}): {len(bouts)} bouts")
+        for b in bouts:
+            print(f"    {b['outcome'] or '?':5s} {b['fighter_1']:28s} def. {b['fighter_2']:28s} {b['method']}")
+        if not bouts or any(b["outcome"] is None for b in bouts):
+            print("  ✗ Missing bouts or outcomes"); all_pass = False
+        fm, wf = get_fight_methods(ev["url"])
+        print(f"  ✓ {len(fm)} fight methods parsed")
 
-        # [2] Winners scraping (live)
-        print("\n[2] Scraping winners from event page...")
-        try:
-            winners = get_winners_from_event(url)
-            if not winners:
-                print("  ✗ No winners found")
-                all_pass = False
-            else:
-                print(f"  ✓ {len(winners)} fighters with results:")
-                for fighter, result in list(sorted(winners.items()))[:6]:
-                    print(f"    {result}  {fighter}")
-        except Exception as e:
-            print(f"  ✗ {e}"); all_pass = False
+    print("\n[3] Name matching / cancelled-bout logic (offline)...")
+    winners = {"jon jones": "W", "stipe miocic": "L", "jean silva": "W", "bruno silva": "L",
+               "allen frye jr.": "D", "suyoung you": "NC"}
+    cases = [("Jon Jones", "W"), ("Stipe Miocic", "L"), ("Jean Silva", "W"),
+             ("Bruno Silva", "L"), ("Silva", None), ("Allen Frye", "D"),
+             ("SuYoung You", "NC"), ("Cancelled Fighter", None), ("", None)]
+    for name, expected in cases:
+        got = _bet_result(name, winners)
+        ok  = got == expected
+        all_pass &= ok
+        print(f"  {'✓' if ok else '✗'}  {name!r:22s} → {got!r}")
 
-    # [3] fight-existence / match_result logic (offline)
-    print("\n[3] fight-existence logic — cancelled bout must return None not L...")
+    print("\n[4] Prop regrade preview (reads GitHub, writes nothing)...")
     try:
-        winners_dict = {
-            "jon jones":        "W",
-            "stipe miocic":     "L",
-            "charles oliveira": "W",
-            "michael chandler": "L",
-        }
-        fought_set = set(winners_dict.keys())
-
-        def match_result_local(fighter_name, w_dict, f_set):
-            name_l = fighter_name.lower().strip() if fighter_name else ""
-            if name_l in f_set:
-                return w_dict.get(name_l)
-            last = name_l.split()[-1] if name_l else ""
-            for k in f_set:
-                if last and last in k:
-                    return w_dict.get(k)
-            parts = [p for p in name_l.split() if len(p) > 3]
-            for k in f_set:
-                if any(p in k for p in parts):
-                    return w_dict.get(k)
-            return None
-
-        cases = [
-            ("Jon Jones",         "W",  "Exact match winner"),
-            ("Stipe Miocic",      "L",  "Exact match loser"),
-            ("Jones",             "W",  "Last-name match"),
-            ("Charles Oliveira",  "W",  "Full name match"),
-            ("Cancelled Fighter", None, "Cancelled bout → must be None not L"),
-            ("Unknown Fighter",   None, "Unknown → None"),
-            ("",                  None, "Empty name → None"),
-        ]
-        for name, expected, desc in cases:
-            got = match_result_local(name, winners_dict, fought_set)
-            ok  = got == expected
-            print(f"  {'✓' if ok else '✗'}  {desc}: got={got!r}")
-            if not ok: all_pass = False
-
-        assert match_result_local("Cancelled Fighter", winners_dict, fought_set) is None, \
-            "CRITICAL: cancelled fighter returned non-None"
-    except Exception as e:
-        print(f"  ✗ {e}"); all_pass = False
-
-    # [4] Prediction file matching (offline)
-    print("\n[4] Prediction file → results matching logic (offline)...")
-    try:
-        import pandas as pd
-        preds = pd.DataFrame([
-            {"name": "Jon Jones",    "bet_size": 2, "odds_numeric": -150},
-            {"name": "Stipe Miocic", "bet_size": 0, "odds_numeric": +130},
-            {"name": "Bo Nickal",    "bet_size": 1, "odds_numeric": -200},
-        ])
-        results = {"jon jones": "W", "stipe miocic": "L"}
-
-        def do_match(n, r):
-            nl = n.lower().strip()
-            if nl in r: return r[nl]
-            last = nl.split()[-1]
-            for k in r:
-                if last in k: return r[k]
-            return None
-
-        preds["result"] = preds["name"].apply(lambda n: do_match(n, results))
-        matched = preds["result"].notna().sum()
-        cancelled = preds[preds["result"].isna()]["name"].tolist()
-        print(f"  ✓ Matched {matched}/{len(preds)} fighters")
-        print(f"  ✓ Unmatched (cancelled/not fought): {cancelled}")
-        assert "Bo Nickal" in cancelled, "Cancelled fighter should be unmatched"
+        regrade_ungraded_props(dry_run=True)
     except Exception as e:
         print(f"  ✗ {e}"); all_pass = False
 
@@ -778,7 +686,8 @@ def run_test():
     print("=" * 60)
     print(f"OVERALL: {'✓ ALL TESTS PASSED' if all_pass else '✗ SOME TESTS FAILED — see above'}")
     print("=" * 60)
-    print("=== END TEST ===")
+    if not all_pass:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -98,11 +98,21 @@ OctaStats_UFC_Model_V2/
 │   ├── 03_train_model.py               # Feature engineering + model training
 │   ├── 04_predict.py                   # Generate weekly predictions
 │   ├── 05_scrape_results.py            # Record post-fight results
-│   └── 06_statistics.py               # Statistical analysis
+│   ├── 06_statistics.py               # Statistical analysis
+│   ├── v1_*.py                         # V1 model (writes to zwinship/UFC_Model)
+│   ├── ufcstats_browser.py             # Shared headless-Chromium UFCStats fetcher
+│   ├── ufcstats_results.py             # Shared completed-event result parser
+│   ├── bfo_odds.py                     # Shared BestFightOdds moneyline parser
+│   ├── dk_links.py                     # DraftKings deep links via Gambly
+│   ├── rankings.py                     # UFC rankings helpers
+│   └── name_match.py                   # Fighter-name normalisation / matching
 │
 ├── data/
 │   ├── raw/
-│   │   └── fight_stats.csv             # Per-fight scraped data (2015-present)
+│   │   ├── fight_stats.csv             # Per-fight scraped data (2015-present)
+│   │   ├── fight_stats_meta.json       # Records the full-fight stats rebuild
+│   │   ├── rankings_history.csv        # Weekly ufc.com rankings snapshots
+│   │   └── bfo_odds_history.csv        # Sportsbook lines for every bout on each card
 │   ├── processed/
 │   │   └── career_styled.csv           # Career stats + style labels (leak-free)
 │   └── model_bundle.pkl                # Serialised model + metadata
@@ -157,5 +167,30 @@ All workflows can also be triggered manually from the GitHub Actions tab.
 - Women's weight classes are included; style classification is computed separately within each weight class.
 - Fights where both fighters have fewer than 3 prior UFC fights are excluded from training.
 - UFCStats sometimes adjusts stats 1–2 days post-event — the Wednesday scrape is intentionally scheduled to capture final values.
+
+- UFCStats serves a JavaScript browser check, so every UFCStats page is loaded in headless Chromium (`ufcstats_browser.py`). A page that never renders makes the job fail instead of being treated as "no new fights".
+- Moneylines come from real sportsbooks only (DraftKings → FanDuel → Caesars → BetMGM → BetRivers → BetWay → Unibet), both sides of a bout from the same book. Prediction markets listed on BestFightOdds (Polymarket, Kalshi) are ignored. A bout without both lines is skipped rather than priced against an assumed 50%.
+
+### Data fixes (October 2026)
+
+| Problem | Effect | Fix |
+|---|---|---|
+| Fight-page parser read UFCStats' **per-round** tables | Every strike/takedown/control stat was round 1 only | Parser reads the full-fight totals; the first Wednesday run re-scrapes every fight once (`fight_stats_meta.json` records it) |
+| BestFightOdds added a hidden admin link and line-movement arrows | ~50% of fighters had no odds (treated as 50%); others got Kalshi/Polymarket prices | New parser (`bfo_odds.py`) |
+| Weekly scraper missed `method`, physicals, odds, and some whole fights | 700 rows since March incomplete | Repaired automatically on the next Wednesday run |
+| ufc.com rankings stored one division off | Rank features wrong since March | History relabelled; scraper reads each table's caption |
+| Prediction-time features | Last fight ignored; title/5-round flags, women's divisions, KO/Sub/Dec market probs and style-shift inputs not passed to the models | Rebuilt with the training code (`build_current_career`) |
+| Results method scraper blocked | 72 prop bets across 19 events left ungraded | Regraded on the next Sunday run |
+| V1 training paired fighters by row order | Only ~9% of training matchups were real opponents; Wrestler/BJJ never assigned | Pairs by fight; control-time column fixed |
+
+## DraftKings links
+
+Bet links are resolved through Gambly, which now only builds bet slips for a **logged-in** session (anonymous requests get `401 Firebase session required`). To enable real DraftKings links:
+
+1. Log in at gambly.com in a desktop browser.
+2. Open DevTools → Network, reload, click any request to `gambly.com/api/...`, and copy the full `Cookie` request header.
+3. Save it as the repository secret **`GAMBLY_COOKIE`** (Settings → Secrets and variables → Actions).
+
+When the session expires the Friday run logs a "Gambly session expired" warning and every bet falls back to a pre-filled Gambly link. Refresh the secret the same way.
 
 See `SETUP.md` for installation and configuration instructions.

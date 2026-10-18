@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn playwright
+          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn tqdm playwright
 
       - name: Install Playwright browser
         run: |
@@ -44,6 +44,9 @@ jobs:
       - name: Run V1 predictions
         env:
           ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
+          GAMBLY_COOKIE: ${{ secrets.GAMBLY_COOKIE }}
+          GAMBLY_TOKEN_SET: ${{ secrets.GAMBLY_TOKEN_SET }}
+          PYTHONUNBUFFERED: "1"
         run: |
           echo "=== V1: Linear regression predictions ==="
           python scripts/v1_predict.py

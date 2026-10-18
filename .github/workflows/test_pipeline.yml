@@ -64,7 +64,8 @@ jobs:
               sys.exit(1)
 
           import base64
-          content = base64.b64decode(resp.json()["content"]).decode("utf-8")
+          # fight_stats.csv is >1 MB: inline "content" is empty, fetch the raw file
+          content = requests.get(url, headers={**headers, "Accept": "application/vnd.github.raw"}, timeout=120).text
           df = pd.read_csv(io.StringIO(content))
           print(f"✓ fight_stats.csv loaded: {len(df)} rows, {len(df.columns)} columns")
 
@@ -124,13 +125,14 @@ jobs:
           else:
               print(f"✓ fight_url pairing: all {len(url_counts)} fights have exactly 2 rows")
 
+          # 0 winners = draw / no contest (legitimate); 2 would be a parse error
           for furl, grp in df.groupby("fight_url"):
-              if grp["won"].sum() != 1:
-                  print(f"✗ fight {furl} has {grp['won'].sum()} winners (expected 1)")
+              if grp["won"].sum() > 1:
+                  print(f"✗ fight {furl} has {grp['won'].sum()} winners (expected ≤ 1)")
                   all_ok = False
                   break
           else:
-              print(f"✓ won column: each fight has exactly 1 winner")
+              print(f"✓ won column: no fight has more than 1 winner")
 
           try:
               dates = pd.to_datetime(df["event_date"], errors="coerce")
@@ -233,7 +235,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn tqdm
+          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn tqdm playwright
+          python -m playwright install --with-deps chromium
 
       - name: "TEST: 02_scrape_weekly_update — UFCStats & UFC.com connectivity"
         run: python scripts/02_scrape_weekly_update.py --test
@@ -255,7 +258,8 @@ jobs:
           url  = "https://api.github.com/repos/zwinship/OctaStats_UFC_Model_V2/contents/data/raw/fight_stats.csv"
           resp = requests.get(url, headers=headers, timeout=15)
           assert resp.status_code == 200, f"HTTP {resp.status_code}"
-          content = base64.b64decode(resp.json()["content"]).decode("utf-8")
+          # fight_stats.csv is >1 MB: inline "content" is empty, fetch the raw file
+          content = requests.get(url, headers={**headers, "Accept": "application/vnd.github.raw"}, timeout=120).text
           df = pd.read_csv(io.StringIO(content))
           print(f"✓ Loaded fight_stats.csv: {len(df)} rows")
 
@@ -393,7 +397,8 @@ jobs:
           url  = "https://api.github.com/repos/zwinship/OctaStats_UFC_Model_V2/contents/data/raw/fight_stats.csv"
           resp = requests.get(url, headers=headers, timeout=15)
           assert resp.status_code == 200
-          content = base64.b64decode(resp.json()["content"]).decode("utf-8")
+          # fight_stats.csv is >1 MB: inline "content" is empty, fetch the raw file
+          content = requests.get(url, headers={**headers, "Accept": "application/vnd.github.raw"}, timeout=120).text
           fights = pd.read_csv(io.StringIO(content))
 
           # Apply aliases that v1_train_model.py needs
@@ -497,7 +502,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn playwright
+          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn tqdm playwright
 
       - name: Install Playwright Chromium
         run: |
@@ -600,7 +605,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn
+          pip install requests beautifulsoup4 lxml pandas numpy scipy scikit-learn playwright
+          python -m playwright install --with-deps chromium
 
       - name: "TEST: 05_scrape_results — fight-existence check"
         run: python scripts/05_scrape_results.py --test
