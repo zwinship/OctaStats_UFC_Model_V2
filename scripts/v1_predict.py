@@ -46,6 +46,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept":        "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -81,7 +83,7 @@ def read_csv_from_github(repo_path, repo=V1_REPO):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None
@@ -91,12 +93,12 @@ def read_csv_from_github(repo_path, repo=V1_REPO):
 
 def read_pickle_from_github(repo_path, repo=V1_REPO):
     url  = f"https://api.github.com/repos/{REPO_OWNER}/{repo}/contents/{repo_path}"
-    resp = requests.get(url, headers=GH_HEADERS, timeout=20)
+    # Raw media type works for files over the 1 MB inline-content limit
+    resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
     if resp.status_code != 200:
         print(f"  [ERROR] Could not load {repo_path}: {resp.status_code}")
         return None
-    data = resp.json()
-    return pickle.loads(base64.b64decode(data["content"]))
+    return pickle.loads(resp.content)
 
 
 def write_csv_to_github(df, repo_path, message, repo=V1_REPO):

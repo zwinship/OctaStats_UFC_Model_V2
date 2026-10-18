@@ -46,6 +46,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 
 
 # ── GitHub I/O ────────────────────────────────────────────────────────────────
@@ -65,7 +67,7 @@ def read_csv_from_github(repo_path):
     # Large files: API returns empty content + download_url
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         print(f"  [WARN] Large file fallback failed (status {raw_resp.status_code})")

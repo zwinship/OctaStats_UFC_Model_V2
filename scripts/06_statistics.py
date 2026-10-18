@@ -36,6 +36,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 
 # Break-even threshold: account for typical bookmaker margin (~4%)
 BREAKEVEN_THRESHOLD = 0.96
@@ -52,7 +54,7 @@ def read_csv(repo_path):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None

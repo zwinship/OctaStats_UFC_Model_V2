@@ -34,6 +34,11 @@ from datetime import datetime, timedelta, timezone
 from scipy.special import expit
 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from name_match import match_name, norm_name
+from ufcstats_browser import fetch_html, SEL_EVENT_LIST, SEL_EVENT_PAGE
+
 warnings.filterwarnings("ignore")
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -47,6 +52,8 @@ GH_HEADERS   = {
     "Authorization": f"token {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
+if not GITHUB_TOKEN:
+    GH_HEADERS.pop("Authorization")   # --test runs read the public repo anonymously
 SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -81,7 +88,7 @@ def read_csv_from_github(repo_path, repo_name=None):
     sha  = data["sha"]
     raw_content = data.get("content", "").replace("\n", "").strip()
     if not raw_content and data.get("download_url"):
-        raw_resp = requests.get(data["download_url"], headers=GH_HEADERS, timeout=60)
+        raw_resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
         if raw_resp.status_code == 200:
             return pd.read_csv(io.StringIO(raw_resp.text)), sha
         return pd.DataFrame(), None
@@ -91,13 +98,12 @@ def read_csv_from_github(repo_path, repo_name=None):
 
 def read_pickle_from_github(repo_path):
     url  = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{repo_path}"
-    resp = requests.get(url, headers=GH_HEADERS)
+    # Raw media type works for files over the 1 MB inline-content limit
+    resp = requests.get(url, headers={**GH_HEADERS, "Accept": "application/vnd.github.raw"}, timeout=120)
     if resp.status_code != 200:
-        print(f"  [ERROR] Could not load {repo_path}")
+        print(f"  [ERROR] Could not load {repo_path}: {resp.status_code}")
         return None
-    data = resp.json()
-    raw  = base64.b64decode(data["content"])
-    return pickle.loads(raw)
+    return pickle.loads(resp.content)
 
 
 def write_csv_to_github(df, repo_path, message, repo_name=None, sha=None):
@@ -133,34 +139,13 @@ def write_json_to_github(obj, repo_path, message, repo_name=None):
 
 # ── Step 1: Check for upcoming event ─────────────────────────────────────────
 
-def _playwright_get_html(url, wait_selector, timeout_ms=20000):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page    = browser.new_page(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        )
-        try:
-            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
-            page.wait_for_selector(wait_selector, timeout=timeout_ms)
-        except PWTimeout:
-            print(f"  [WARN] Playwright timed out waiting for {wait_selector} on {url}")
-        except Exception as e:
-            print(f"  [WARN] Playwright navigation error: {e}")
-        html = page.content()
-        browser.close()
-        return html
-
-
 def get_upcoming_event():
     url  = f"{BASE_URL}/statistics/events/upcoming"
     print("  Fetching UFCStats upcoming events (Playwright)...")
-    html = _playwright_get_html(url, "tr.b-statistics__table-row")
+    html = fetch_html(url, SEL_EVENT_LIST)
     if not html:
-        return None
+        raise RuntimeError("UFCStats upcoming-events page did not load "
+                           "(browser check not cleared) — refusing to report 'no event'.")
     soup      = BeautifulSoup(html, "lxml")
     rows      = soup.select("tr.b-statistics__table-row")
     today     = datetime.now(timezone.utc).date()
@@ -190,46 +175,45 @@ def get_upcoming_event():
     return None
 
 
+WEIGHT_CLASSES = ["Strawweight", "Flyweight", "Bantamweight", "Featherweight",
+                  "Lightweight", "Welterweight", "Middleweight", "Light Heavyweight",
+                  "Heavyweight", "Catch Weight"]
+
+
 def get_fights_from_event(event_url):
+    """
+    [(fighter_a, fighter_b, weight_class, info), ...] in card order.
+    info = {"title_bout": 0/1, "number_of_rounds": 3/5}. Title bouts carry a
+    belt icon in the weight-class cell; the first bout is the main event
+    (always five rounds).
+    """
     print(f"  Fetching event page (Playwright): {event_url}")
-    html = _playwright_get_html(event_url, "tr.b-fight-details__table-row")
+    html = fetch_html(event_url, SEL_EVENT_PAGE)
     if not html:
-        return []
-    soup     = BeautifulSoup(html, "lxml")
-    bouts    = []
-    all_rows = (
-        soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover")
-        or soup.select("tr.b-fight-details__table-row")
-    )
-    WEIGHT_CLASSES = ["Strawweight", "Flyweight", "Bantamweight", "Featherweight",
-                      "Lightweight", "Welterweight", "Middleweight", "Light Heavyweight",
-                      "Heavyweight"]
-    for row in all_rows:
+        raise RuntimeError(f"UFCStats event page did not load: {event_url}")
+    soup  = BeautifulSoup(html, "lxml")
+    bouts = []
+    for row in soup.select("tr.b-fight-details__table-row.b-fight-details__table-row__hover"):
         tds = row.find_all("td")
-        if not tds:
+        if len(tds) < 7:
             continue
-        fighter_links = []
-        for td_idx in [1, 0]:
-            if td_idx < len(tds):
-                fighter_links = tds[td_idx].select("p a.b-link") or tds[td_idx].select("a.b-link")
-                if len(fighter_links) >= 2:
-                    break
-        if len(fighter_links) < 2:
-            fighter_links = row.select("a.b-link")
-        if len(fighter_links) < 2:
+        links = tds[1].select("p a") or row.select("a.b-link")
+        if len(links) < 2:
             continue
-        f1, f2 = fighter_links[0].get_text(strip=True), fighter_links[1].get_text(strip=True)
+        f1, f2  = links[0].get_text(strip=True), links[1].get_text(strip=True)
+        wc_cell = tds[6]
+        wc_text = wc_cell.get_text(" ", strip=True)
         wc = "Unknown"
-        for td in tds:
-            td_text = td.get_text(strip=True)
-            for wc_name in WEIGHT_CLASSES:
-                if wc_name.lower() in td_text.lower():
-                    wc = ("Women's " + wc_name) if "women" in td_text.lower() else wc_name
-                    break
-            if wc != "Unknown":
+        # Longest name first so "Light Heavyweight" is not read as "Heavyweight"
+        for wc_name in sorted(WEIGHT_CLASSES, key=len, reverse=True):
+            if wc_name.lower() in wc_text.lower():
+                wc = ("Women's " + wc_name) if "women" in wc_text.lower() else wc_name
                 break
+        is_title = int(bool(wc_cell.select_one("img[src*='belt']")))
+        info = {"title_bout": is_title,
+                "number_of_rounds": 5 if (is_title or not bouts) else 3}
         if f1 and f2:
-            bouts.append((f1, f2, wc))
+            bouts.append((f1, f2, wc, info))
     return bouts
 
 
@@ -263,6 +247,116 @@ def _bfo_name_tokens(full_name):
     return set(full_name.lower().split()) if full_name else set()
 
 
+# Moneyline sportsbook priority. Prediction markets (Polymarket, Kalshi) are
+# listed on BFO too but are never used — their prices are not sportsbook lines.
+ML_BOOK_PREF = ["draftkings", "fanduel", "caesars", "betmgm", "betrivers", "betway", "unibet"]
+_ODDS_RE     = re.compile(r"^[+-]\d{3,5}$")
+
+
+def _bfo_cell_odds(cell):
+    """American odds in a BFO odds cell. The price lives in the first <span>;
+    a sibling <span> holds the ▲/▼ line-movement arrow, so reading the whole
+    cell text ('-340▲') does not work."""
+    if cell is None:
+        return None
+    span = cell.find("span")
+    t = (span.get_text(strip=True) if span else cell.get_text(strip=True)).replace("−", "-")
+    return t if _ODDS_RE.match(t) else None
+
+
+def _bfo_book_columns(table):
+    """{book_key: column index} from an odds table's header row."""
+    cols = {}
+    thead = table.find("thead")
+    header = thead.find("tr") if thead else None
+    if header is None:
+        return cols
+    for idx, th in enumerate(header.find_all(["th", "td"])):
+        label = th.get_text(" ", strip=True).lower().replace(" ", "")
+        for book in ML_BOOK_PREF + ["polymarket", "kalshi"]:
+            if label.startswith(book) and book not in cols:
+                cols[book] = idx
+    return cols
+
+
+def _parse_bfo_moneylines(soup):
+    """
+    Parse every matchup on the BestFightOdds front page.
+
+    BFO renders each event twice (a names-only responsive table, then the real
+    odds table). Each matchup is two consecutive rows; the first row's <th>
+    also contains a hidden admin link (<a class="bfo-admin-link">45250</a>)
+    before the fighter link, so names must come from span.t-b-fcc.
+
+    Returns DataFrame: fighter, odds, opponent, book, matchup_id, event
+    Both fighters in a matchup are priced from the SAME book (first book in
+    ML_BOOK_PREF quoting both sides) so the two implied probs are consistent.
+    """
+    out = []
+    for table in soup.select("table.odds-table"):
+        if "odds-table-responsive-header" in (table.get("class") or []):
+            continue
+        cols = _bfo_book_columns(table)
+        if not any(b in cols for b in ML_BOOK_PREF):
+            continue
+        hdr   = table.find_previous("div", class_="table-header")
+        event = hdr.get_text(" ", strip=True) if hdr else ""
+
+        matchups = {}   # matchup_id -> [(name, cells), ...] in page order
+        order    = []
+        for row in (table.find("tbody") or table).find_all("tr", recursive=False):
+            if "pr" in (row.get("class") or []):
+                continue
+            th = row.find("th")
+            name_el = th.select_one("span.t-b-fcc") if th else None
+            if not name_el:
+                continue
+            cells = row.find_all(["th", "td"], recursive=False)
+            mid = None
+            for td in cells:
+                m = re.match(r"\[\s*\d+\s*,\s*\d+\s*,\s*(\d+)", td.get("data-li", ""))
+                if m:
+                    mid = m.group(1)
+                    break
+            if mid is None:
+                # No priced cell: first row carries id="mu-<id>", second row
+                # belongs to whichever matchup is still waiting for a partner
+                rid = row.get("id", "")
+                if rid.startswith("mu-"):
+                    mid = rid[3:]
+                elif order and len(matchups[order[-1]]) == 1:
+                    mid = order[-1]
+                else:
+                    mid = f"x{len(order)}"
+            if mid not in matchups:
+                matchups[mid] = []
+                order.append(mid)
+            matchups[mid].append((name_el.get_text(strip=True), cells))
+
+        for mid in order:
+            pair = matchups[mid]
+            if len(pair) != 2:
+                continue
+            chosen = None
+            for book in ML_BOOK_PREF:
+                col = cols.get(book)
+                if col is None:
+                    continue
+                o1 = _bfo_cell_odds(pair[0][1][col] if col < len(pair[0][1]) else None)
+                o2 = _bfo_cell_odds(pair[1][1][col] if col < len(pair[1][1]) else None)
+                if o1 and o2:
+                    chosen = (book, o1, o2)
+                    break
+            if chosen is None:
+                continue
+            book, o1, o2 = chosen
+            for (name, _), odds, opp in [(pair[0], o1, pair[1][0]), (pair[1], o2, pair[0][0])]:
+                out.append({"fighter": name, "odds": odds, "opponent": opp,
+                            "book": book.title(), "matchup_id": mid, "event": event})
+
+    return pd.DataFrame(out, columns=["fighter", "odds", "opponent", "book", "matchup_id", "event"])
+
+
 def scrape_bestfightodds():
     """
     Single fetch of BestFightOdds. Returns:
@@ -281,67 +375,10 @@ def scrape_bestfightodds():
 
     soup = BeautifulSoup(resp.text, "lxml")
 
-    # ── Moneyline scraping (unchanged logic) ──────────────────────────────────
-    ML_BOOK_PREF = ["draftkings", "caesars", "betrivers", "betway", "unibet", "bet365"]
-    book_col_map = {}
-
-    for row in soup.select("tr"):
-        cells = row.find_all(["td", "th"])
-        if len(cells) < 2:
-            continue
-        texts = [c.get_text(strip=True).lower() for c in cells]
-        if sum(1 for b in ML_BOOK_PREF if any(b in t for t in texts)) >= 2:
-            for i, t in enumerate(texts):
-                for b in ML_BOOK_PREF:
-                    if b in t and b not in book_col_map:
-                        book_col_map[b] = i
-            if book_col_map:
-                break
-
-    preferred_col, preferred_book = None, None
-    for book in ML_BOOK_PREF:
-        if book in book_col_map:
-            preferred_col  = book_col_map[book]
-            preferred_book = book.title()
-            break
-
-    print(f"  Moneyline odds from: {preferred_book} (col {preferred_col})")
-
-    PROP_WORDS = {"wins", "by", "inside", "decision", "draw", "round", "goes", "starts",
-                  "doesn", "won", "ends", "either", "other", "points", "deducted",
-                  "submission", "tko", "ko", "majority", "split", "unanimous", "parlay",
-                  "over", "under", "not", "fight", "method"}
-
-    fighters, odds_list = [], []
-    for row in soup.select("tr"):
-        cells    = row.find_all(["td", "th"])
-        name_el  = row.select_one("a")
-        if not name_el:
-            continue
-        fighter_name = name_el.get_text(strip=True)
-        if not fighter_name or len(fighter_name) < 3:
-            continue
-        if set(fighter_name.lower().split()) & PROP_WORDS:
-            continue
-
-        odds_text = None
-        if preferred_col is not None and preferred_col < len(cells):
-            t = cells[preferred_col].get_text(strip=True)
-            if re.match(r'^[+-]\d{2,4}$', t):
-                odds_text = t
-
-        if odds_text is None:
-            m = re.search(r'[+-]\d{3,4}(?!\d)', row.get_text(" ", strip=True))
-            if m:
-                odds_text = m.group()
-
-        if odds_text and re.match(r'^[+-]\d{2,4}$', odds_text):
-            fighters.append(fighter_name)
-            odds_list.append(odds_text)
-
-    ml_df = pd.DataFrame({"fighter": fighters, "odds": odds_list}).drop_duplicates(
-        subset="fighter", keep="first")
-    print(f"  Scraped {len(ml_df)} moneyline odds ({preferred_book})")
+    ml_df = _parse_bfo_moneylines(soup)
+    books = ml_df["book"].value_counts().to_dict() if not ml_df.empty else {}
+    print(f"  Scraped {len(ml_df)} moneyline odds across "
+          f"{ml_df['matchup_id'].nunique() if not ml_df.empty else 0} matchups (books: {books})")
 
     # ── Prop odds scraping ────────────────────────────────────────────────────
     prop_records = []
@@ -504,17 +541,34 @@ def implied_prob_from_odds(odds):
     return 100 / (odds + 100) if odds > 0 else abs(odds) / (abs(odds) + 100)
 
 
-def _match_fighter_odds(name, odds_df):
-    if odds_df.empty:
-        return None
-    exact = odds_df[odds_df["fighter"].str.lower() == name.lower()]
-    if not exact.empty:
-        return exact.iloc[0]["odds"]
-    last_name = name.split()[-1].lower()
-    partial   = odds_df[odds_df["fighter"].str.lower().str.contains(last_name, na=False)]
-    if not partial.empty:
-        return partial.iloc[0]["odds"]
-    return None
+def _match_bout_odds(fa, fb, odds_df):
+    """
+    (odds_a, odds_b) for the BFO matchup containing these two fighters.
+    Matching on the PAIR avoids pulling a same-surname fighter's line from a
+    different fight or promotion on the BFO front page.
+    """
+    if odds_df is None or odds_df.empty:
+        return None, None
+    for mid, grp in odds_df.groupby("matchup_id", sort=False):
+        names = grp["fighter"].tolist()
+        if len(names) != 2:
+            continue
+        ma, mb = match_name(fa, names), match_name(fb, names)
+        if ma and mb and ma != mb:
+            g = grp.set_index("fighter")
+            return g.loc[ma, "odds"], g.loc[mb, "odds"]
+    # Pair not found (e.g. late replacement listed under another name):
+    # accept a single-fighter match only when it is unique on the page.
+    oa = ob = None
+    for name, key in [(fa, "a"), (fb, "b")]:
+        hit = match_name(name, odds_df["fighter"].unique().tolist())
+        if hit is not None:
+            val = odds_df[odds_df["fighter"] == hit].iloc[0]["odds"]
+            if key == "a":
+                oa = val
+            else:
+                ob = val
+    return oa, ob
 
 
 # ── Step 3-4: Build features for upcoming fights ──────────────────────────────
@@ -553,11 +607,16 @@ def build_upcoming_features(fights, career_styled_df, odds_df, model_bundle):
             print(f"  [SKIP] Insufficient data for {short} ({n} fights in dataset < {MIN_FIGHTS}). Skipping fight.")
             continue
 
-        odds_a = convert_odds(_match_fighter_odds(fa, odds_df))
-        odds_b = convert_odds(_match_fighter_odds(fb, odds_df))
+        raw_a, raw_b = _match_bout_odds(fa, fb, odds_df)
+        odds_a = convert_odds(raw_a)
+        odds_b = convert_odds(raw_b)
 
-        if np.isnan(odds_a) and np.isnan(odds_b):
-            print(f"  [WARN] No odds found for {fa} vs {fb}")
+        # Both lines are required: the market implied prob is the model's
+        # strongest input and the edge is measured against the vig-normalised
+        # pair, so a one-sided line cannot be priced correctly.
+        if np.isnan(odds_a) or np.isnan(odds_b):
+            missing = " and ".join(n for n, o in [(fa, odds_a), (fb, odds_b)] if np.isnan(o))
+            print(f"  [WARN] No sportsbook odds for {missing} ({fa} vs {fb}). Skipping fight.")
             continue
 
         for (fighter, opponent, row_f, row_o, odds_f, odds_o) in [
