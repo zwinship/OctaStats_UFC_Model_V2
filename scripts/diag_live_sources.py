@@ -84,7 +84,7 @@ try:
     if ev:
         ok = 0
         for fa, fb, wc, info in ev["fights"]:
-            oa, ob = p4._match_bout_odds(fa, fb, ml)
+            oa, ob = p4.match_bout_odds(fa, fb, ml)
             ok += bool(oa and ob)
             print(f"  {fa:26s} {str(oa):>6s} | {fb:26s} {str(ob):>6s} | {wc:20s} {info}")
         print(f"  → both lines found for {ok}/{len(ev['fights'])} bouts")

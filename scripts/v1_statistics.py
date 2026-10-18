@@ -78,11 +78,16 @@ def american_to_decimal(odds):
         return None
 
 
+PUSH_RESULTS = ("D", "NC", "VOID")   # draw / no contest / cancelled → stake returned
+
+
 def compute_rtp(row):
-    """RTP multiplier per unit staked. Win: decimal odds. Loss: 0."""
+    """RTP multiplier per unit staked. Win: decimal odds. Loss: 0. Push: 1."""
     bet = int(row.get("bet_size", 0))
     if bet == 0:
         return None
+    if row.get("result") in PUSH_RESULTS:
+        return 1.0
     won = row.get("won", 0) == 1 or row.get("result", "") == "W"
     odds_val = row.get("Odds") if row.get("Odds") is not None else row.get("odds")
     dec = american_to_decimal(odds_val)
@@ -155,16 +160,19 @@ def main():
         dec = american_to_decimal(odds_val)
         if dec is None:
             return 0.0
+        if r.get("result") in PUSH_RESULTS:
+            return 0.0
         won = r.get("won", 0) == 1 or r.get("result") == "W"
         bet = int(r.get("bet_size", 0))
         return float(dec - 1) * bet if won else -float(bet)
     bets["net"] = bets.apply(_net, axis=1)
+    pushes        = int(bets["result"].isin(PUSH_RESULTS).sum()) if "result" in bets.columns else 0
     total_bets    = len(bets)
     total_wins    = int(bets["won"].sum())
-    total_losses  = total_bets - total_wins
+    total_losses  = total_bets - total_wins - pushes
     units_staked  = float(bets["bet_size"].astype(float).sum())
     net_units     = float(bets["net"].sum())
-    win_rate_pct  = round(total_wins / total_bets * 100, 2) if total_bets else 0
+    win_rate_pct  = round(total_wins / (total_bets - pushes) * 100, 2) if total_bets > pushes else 0
     rtp_pct       = round((1 + net_units / units_staked) * 100, 2) if units_staked else 0
 
     # 5. Basic stats on RTP series
