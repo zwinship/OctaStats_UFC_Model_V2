@@ -109,3 +109,7 @@ UFC 333: Volkanovski vs. Evloev,2026-10-24,2026-10-25,Alexander Volkanovski,Movs
 UFC 333: Volkanovski vs. Evloev,2026-10-24,2026-10-25,Petr Yan,Merab Dvalishvili,Petr Yan,Petr Yan vs Merab Dvalishvili,fighter_a_ko,Petr Yan wins by KO/TKO,0.3531,0.1786,0.1745,1.66,0.0,0.0,-1.66,0.0
 UFC 333: Volkanovski vs. Evloev,2026-10-24,2026-10-25,Bolaji Oki,Daniel Santos,Daniel Santos,Bolaji Oki vs Daniel Santos,fighter_b_dec,Daniel Santos wins by Decision,0.3574,0.2041,0.1533,1.64,1.0,8.0353,6.3953,4.8996
 UFC 333: Volkanovski vs. Evloev,2026-10-24,2026-10-25,Bolaji Oki,Daniel Santos,Bolaji Oki,Bolaji Oki vs Daniel Santos,fight_goes_distance,Fight Goes to Decision,0.6339,0.3571,0.2768,1.8,1.0,5.0406,3.2406,2.8003
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Randy Brown,Jacobe Smith,Jacobe Smith,Randy Brown vs Jacobe Smith,fighter_b_dec,Jacobe Smith wins by Decision,0.3178,0.1538,0.164,1.68,1.0,10.9233,9.2433,6.502
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Yana Santos,Luana Santos,Luana Santos,Yana Santos vs Luana Santos,fighter_b_dec,Luana Santos wins by Decision,0.5763,0.25,0.3263,1.67,1.0,6.68,5.01,4.0
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Julian Erosa,JeongYeong Lee,Julian Erosa,Julian Erosa vs JeongYeong Lee,fight_goes_distance,Fight Goes to Decision,0.5824,0.25,0.3324,1.69,0.0,0.0,-1.69,0.0
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Zach Reese,Mickey Gall,Zach Reese,Zach Reese vs Mickey Gall,fighter_a_dec,Zach Reese wins by Decision,0.2717,0.125,0.1467,1.7,1.0,13.6,11.9,8.0
