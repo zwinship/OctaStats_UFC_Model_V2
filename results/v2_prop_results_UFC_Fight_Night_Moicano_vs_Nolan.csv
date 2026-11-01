@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Randy Brown,Jacobe Smith,Jacobe Smith,Randy Brown vs Jacobe Smith,fighter_b_dec,Jacobe Smith wins by Decision,0.3178,0.1538,0.164,1.68,1,10.9233,9.2433,6.502
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Yana Santos,Luana Santos,Luana Santos,Yana Santos vs Luana Santos,fighter_b_dec,Luana Santos wins by Decision,0.5763,0.25,0.3263,1.67,1,6.68,5.01,4.0
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Julian Erosa,JeongYeong Lee,Julian Erosa,Julian Erosa vs JeongYeong Lee,fight_goes_distance,Fight Goes to Decision,0.5824,0.25,0.3324,1.69,0,0.0,-1.69,0.0
+UFC Fight Night: Moicano vs. Nolan,2026-10-31,2026-11-01,Zach Reese,Mickey Gall,Zach Reese,Zach Reese vs Mickey Gall,fighter_a_dec,Zach Reese wins by Decision,0.2717,0.125,0.1467,1.7,1,13.6,11.9,8.0
