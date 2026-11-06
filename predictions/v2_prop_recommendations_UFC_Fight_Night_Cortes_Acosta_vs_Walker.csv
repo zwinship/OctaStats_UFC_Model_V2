@@ -1,0 +1,41 @@
+fighter_a,fighter_b,fighter,opponent,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_odds_str,market_edge,flagged,bet_size
+Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta vs Johnny Walker,fighter_a_ko,Waldo Cortes Acosta wins by KO/TKO,0.4646,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta vs Johnny Walker,fighter_a_sub,Waldo Cortes Acosta wins by Submission,0.0348,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta vs Johnny Walker,fighter_a_dec,Waldo Cortes Acosta wins by Decision,0.161,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Johnny Walker,Waldo Cortes Acosta,Waldo Cortes Acosta vs Johnny Walker,fighter_b_ko,Johnny Walker wins by KO/TKO,0.2388,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Johnny Walker,Waldo Cortes Acosta,Waldo Cortes Acosta vs Johnny Walker,fighter_b_sub,Johnny Walker wins by Submission,0.0179,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Johnny Walker,Waldo Cortes Acosta,Waldo Cortes Acosta vs Johnny Walker,fighter_b_dec,Johnny Walker wins by Decision,0.0828,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta vs Johnny Walker,fight_goes_distance,Fight Goes to Decision,0.2439,,,,False,0.0
+Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta,Johnny Walker,Waldo Cortes Acosta vs Johnny Walker,fight_inside_distance,Fight Ends Inside Distance,0.7561,,,,False,0.0
+Tatiana Suarez,Virna Jandiroba,Tatiana Suarez,Virna Jandiroba,Tatiana Suarez vs Virna Jandiroba,fighter_a_ko,Tatiana Suarez wins by KO/TKO,0.0892,0.0833,+1100,0.0059,False,0.0
+Tatiana Suarez,Virna Jandiroba,Tatiana Suarez,Virna Jandiroba,Tatiana Suarez vs Virna Jandiroba,fighter_a_sub,Tatiana Suarez wins by Submission,0.181,0.125,+700,0.056,False,0.0
+Tatiana Suarez,Virna Jandiroba,Tatiana Suarez,Virna Jandiroba,Tatiana Suarez vs Virna Jandiroba,fighter_a_dec,Tatiana Suarez wins by Decision,0.615,0.5238,-110,0.0912,False,0.0
+Tatiana Suarez,Virna Jandiroba,Virna Jandiroba,Tatiana Suarez,Tatiana Suarez vs Virna Jandiroba,fighter_b_ko,Virna Jandiroba wins by KO/TKO,0.0116,0.0357,+2700,-0.0241,False,0.0
+Tatiana Suarez,Virna Jandiroba,Virna Jandiroba,Tatiana Suarez,Tatiana Suarez vs Virna Jandiroba,fighter_b_sub,Virna Jandiroba wins by Submission,0.0235,0.1176,+750,-0.0941,False,0.0
+Tatiana Suarez,Virna Jandiroba,Virna Jandiroba,Tatiana Suarez,Tatiana Suarez vs Virna Jandiroba,fighter_b_dec,Virna Jandiroba wins by Decision,0.0797,0.2632,+280,-0.1835,False,0.0
+Tatiana Suarez,Virna Jandiroba,Tatiana Suarez,Virna Jandiroba,Tatiana Suarez vs Virna Jandiroba,fight_goes_distance,Fight Goes to Decision,0.6947,0.7674,-330,-0.0727,False,0.0
+Tatiana Suarez,Virna Jandiroba,Tatiana Suarez,Virna Jandiroba,Tatiana Suarez vs Virna Jandiroba,fight_inside_distance,Fight Ends Inside Distance,0.3053,0.2941,+240,0.0112,False,0.0
+Davey Grant,Elijah Smith,Davey Grant,Elijah Smith,Davey Grant vs Elijah Smith,fighter_a_ko,Davey Grant wins by KO/TKO,0.0828,0.125,+700,-0.0422,False,0.0
+Davey Grant,Elijah Smith,Davey Grant,Elijah Smith,Davey Grant vs Elijah Smith,fighter_a_sub,Davey Grant wins by Submission,0.0346,0.0625,+1500,-0.0279,False,0.0
+Davey Grant,Elijah Smith,Davey Grant,Elijah Smith,Davey Grant vs Elijah Smith,fighter_a_dec,Davey Grant wins by Decision,0.1238,0.1667,+500,-0.0429,False,0.0
+Davey Grant,Elijah Smith,Elijah Smith,Davey Grant,Davey Grant vs Elijah Smith,fighter_b_ko,Elijah Smith wins by KO/TKO,0.2605,0.339,+195,-0.0785,False,0.0
+Davey Grant,Elijah Smith,Elijah Smith,Davey Grant,Davey Grant vs Elijah Smith,fighter_b_sub,Elijah Smith wins by Submission,0.1089,0.1724,+480,-0.0635,False,0.0
+Davey Grant,Elijah Smith,Elijah Smith,Davey Grant,Davey Grant vs Elijah Smith,fighter_b_dec,Elijah Smith wins by Decision,0.3894,0.2941,+240,0.0953,False,0.0
+Davey Grant,Elijah Smith,Davey Grant,Elijah Smith,Davey Grant vs Elijah Smith,fight_goes_distance,Fight Goes to Decision,0.5132,0.431,+132,0.0822,False,0.0
+Davey Grant,Elijah Smith,Davey Grant,Elijah Smith,Davey Grant vs Elijah Smith,fight_inside_distance,Fight Ends Inside Distance,0.4868,0.6296,-170,-0.1428,False,0.0
+Karine Silva,Gabriella Fernandes,Karine Silva,Gabriella Fernandes,Karine Silva vs Gabriella Fernandes,fighter_a_ko,Karine Silva wins by KO/TKO,0.1156,0.1176,+750,-0.002,False,0.0
+Karine Silva,Gabriella Fernandes,Karine Silva,Gabriella Fernandes,Karine Silva vs Gabriella Fernandes,fighter_a_sub,Karine Silva wins by Submission,0.1876,0.2632,+280,-0.0756,False,0.0
+Karine Silva,Gabriella Fernandes,Karine Silva,Gabriella Fernandes,Karine Silva vs Gabriella Fernandes,fighter_a_dec,Karine Silva wins by Decision,0.4504,0.3636,+175,0.0868,False,0.0
+Karine Silva,Gabriella Fernandes,Gabriella Fernandes,Karine Silva,Karine Silva vs Gabriella Fernandes,fighter_b_ko,Gabriella Fernandes wins by KO/TKO,0.0378,0.0769,+1200,-0.0391,False,0.0
+Karine Silva,Gabriella Fernandes,Gabriella Fernandes,Karine Silva,Karine Silva vs Gabriella Fernandes,fighter_b_sub,Gabriella Fernandes wins by Submission,0.0613,0.0769,+1200,-0.0156,False,0.0
+Karine Silva,Gabriella Fernandes,Gabriella Fernandes,Karine Silva,Karine Silva vs Gabriella Fernandes,fighter_b_dec,Gabriella Fernandes wins by Decision,0.1473,0.2439,+310,-0.0966,False,0.0
+Karine Silva,Gabriella Fernandes,Karine Silva,Gabriella Fernandes,Karine Silva vs Gabriella Fernandes,fight_goes_distance,Fight Goes to Decision,0.5977,0.5968,-148,0.0009,False,0.0
+Karine Silva,Gabriella Fernandes,Karine Silva,Gabriella Fernandes,Karine Silva vs Gabriella Fernandes,fight_inside_distance,Fight Ends Inside Distance,0.4023,0.463,+116,-0.0607,False,0.0
+Seokhyeon Ko,Wellington Turman,Seokhyeon Ko,Wellington Turman,Seokhyeon Ko vs Wellington Turman,fighter_a_ko,Seokhyeon Ko wins by KO/TKO,0.2354,0.4082,+145,-0.1728,False,0.0
+Seokhyeon Ko,Wellington Turman,Seokhyeon Ko,Wellington Turman,Seokhyeon Ko vs Wellington Turman,fighter_a_sub,Seokhyeon Ko wins by Submission,0.1673,0.1333,+650,0.034,False,0.0
+Seokhyeon Ko,Wellington Turman,Seokhyeon Ko,Wellington Turman,Seokhyeon Ko vs Wellington Turman,fighter_a_dec,Seokhyeon Ko wins by Decision,0.4123,0.4,+150,0.0123,False,0.0
+Seokhyeon Ko,Wellington Turman,Wellington Turman,Seokhyeon Ko,Seokhyeon Ko vs Wellington Turman,fighter_b_ko,Wellington Turman wins by KO/TKO,0.0535,0.0476,+2000,0.0059,False,0.0
+Seokhyeon Ko,Wellington Turman,Wellington Turman,Seokhyeon Ko,Seokhyeon Ko vs Wellington Turman,fighter_b_sub,Wellington Turman wins by Submission,0.038,0.0556,+1700,-0.0176,False,0.0
+Seokhyeon Ko,Wellington Turman,Wellington Turman,Seokhyeon Ko,Seokhyeon Ko vs Wellington Turman,fighter_b_dec,Wellington Turman wins by Decision,0.0936,0.1053,+850,-0.0117,False,0.0
+Seokhyeon Ko,Wellington Turman,Seokhyeon Ko,Wellington Turman,Seokhyeon Ko vs Wellington Turman,fight_goes_distance,Fight Goes to Decision,0.5059,0.4762,+110,0.0297,False,0.0
+Seokhyeon Ko,Wellington Turman,Seokhyeon Ko,Wellington Turman,Seokhyeon Ko vs Wellington Turman,fight_inside_distance,Fight Ends Inside Distance,0.4941,0.5833,-140,-0.0892,False,0.0
