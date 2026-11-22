@@ -1,0 +1,5 @@
+event_name,event_date,result_date,fighter_a,fighter_b,fighter,matchup,prop_type,prop_label,model_prob,market_implied_prob,market_edge,bet_size,won,total_return,net,profit_multiplier
+UFC Fight Night: Prochazka vs. Stirling,2026-11-21,2026-11-22,Aljamain Sterling,Kevin Vallejos,Kevin Vallejos,Aljamain Sterling vs Kevin Vallejos,fighter_b_dec,Kevin Vallejos wins by Decision,0.4292,0.2439,0.1853,1.59,1,6.5191,4.9291,4.1001
+UFC Fight Night: Prochazka vs. Stirling,2026-11-21,2026-11-22,Shamil Gaziev,Tallison Teixeira,Shamil Gaziev,Shamil Gaziev vs Tallison Teixeira,fighter_a_dec,Shamil Gaziev wins by Decision,0.3161,0.0909,0.2252,1.74,0,0.0,-1.74,0.0
+UFC Fight Night: Prochazka vs. Stirling,2026-11-21,2026-11-22,Shamil Gaziev,Tallison Teixeira,Tallison Teixeira,Shamil Gaziev vs Tallison Teixeira,fighter_b_dec,Tallison Teixeira wins by Decision,0.2122,0.0833,0.1289,1.71,1,20.5282,18.8182,12.0048
+UFC Fight Night: Prochazka vs. Stirling,2026-11-21,2026-11-22,Shamil Gaziev,Tallison Teixeira,Shamil Gaziev,Shamil Gaziev vs Tallison Teixeira,fight_goes_distance,Fight Goes to Decision,0.5283,0.1613,0.367,1.61,1,9.9814,8.3714,6.1996
