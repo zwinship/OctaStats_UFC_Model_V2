@@ -2,9 +2,20 @@ name: Sunday — Record Results & Update Statistics
 
 on:
   schedule:
-    # Every Sunday at noon UTC (8am ET)
+    # Fight-night polling: every 30 min from Saturday 10:00 UTC to Sunday
+    # 11:30 UTC (covers Asia/Australia, Abu Dhabi, Europe and US cards).
+    # Each poll exits in seconds unless an event is in progress, and the
+    # results steps run once — as soon as UFCStats has every bout final.
+    - cron: '*/30 10-23 * * 6'
+    - cron: '*/30 0-11 * * 0'
+    # Fallback: Sunday noon UTC (8am ET) catches anything the polls missed
     - cron: '0 12 * * 0'
   workflow_dispatch:
+
+# Never let two polls record the same event at once
+concurrency:
+  group: results-recorder
+  cancel-in-progress: false
 
 jobs:
   results-and-stats:
@@ -16,13 +27,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Cheap gate (no installs): is an event this weekend still unrecorded?
+      - name: Check for an event this weekend
+        id: precheck
+        if: github.event_name == 'schedule' && github.event.schedule != '0 12 * * 0'
+        run: python3 scripts/results_ready.py --precheck
+
       - name: Set up Python 3.11
+        if: steps.precheck.outputs.poll != 'false'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
+        if: steps.precheck.outputs.poll != 'false'
         run: |
           pip install --upgrade pip
           pip install \
@@ -38,7 +57,19 @@ jobs:
           python -m playwright install chromium
           python -m playwright install-deps chromium
 
+      # Are all bouts final on UFCStats and not yet recorded?
+      - name: Check results are complete
+        id: ready
+        if: steps.precheck.outputs.poll != 'false'
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" != "0 12 * * 0" ]; then
+            python scripts/results_ready.py
+          else
+            python scripts/results_ready.py --fallback
+          fi
+
       - name: Scrape V2 fight results
+        if: steps.ready.outputs.ready == 'true'
         env:
           ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
         run: |
@@ -46,6 +77,7 @@ jobs:
           python scripts/05_scrape_results.py
 
       - name: Run V2 statistical analysis
+        if: steps.ready.outputs.ready == 'true'
         env:
           ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
         run: |
@@ -53,6 +85,7 @@ jobs:
           python scripts/06_statistics.py
 
       - name: Scrape V1 fight results
+        if: steps.ready.outputs.ready == 'true'
         env:
           ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
         run: |
@@ -60,6 +93,7 @@ jobs:
           python scripts/v1_scrape_results.py
 
       - name: Run V1 statistical analysis
+        if: steps.ready.outputs.ready == 'true'
         env:
           ZWINSHIP_PAT: ${{ secrets.ZWINSHIP_PAT }}
         run: |
@@ -67,7 +101,7 @@ jobs:
           python scripts/v1_statistics.py
 
       - name: Notify OctaStats site to refresh results and statistics
-        if: success()
+        if: success() && steps.ready.outputs.ready == 'true'
         env:
           OCTASTATS_PAT: ${{ secrets.OCTASTATS_PAT }}
         run: |
@@ -75,7 +109,7 @@ jobs:
             -H "Authorization: token $OCTASTATS_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/OctaStats/OctaStats.github.io/dispatches \
-            -d '{"event_type":"results-updated","client_payload":{"trigger":"sunday-results"}}'
+            -d '{"event_type":"results-updated","client_payload":{"trigger":"results-recorded"}}'
           echo "Results update triggered on OctaStats site"
 
       - name: Log completion
